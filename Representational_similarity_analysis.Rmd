@@ -133,7 +133,7 @@ nsim <- rowMeans(scale(ndat))
 
 ```{r fig.height=10, fig.width=8}
 
-# read in dimensions
+# 按维度读取信息
 pdims <- read.csv("dimensions.csv")
 pnames <- as.character(pdims$name)
 pdims <- scale(pdims[,2:14])
@@ -145,6 +145,8 @@ levelplot(t(pdims),xlab="",ylab="",scales=list(x=list(rot=45)))
 Finally, we'll read in some holistic similarity measures: explicit ratings of the pairwise similarity between target people, and 
 a measure of textual similarity derived from taking a bag-of-words approach to the target people's Wikipedia pages. These have been
 reverse-coded (i.e., as distances) so we'll flip their signs to make them similarities again.
+
+最终，我们将会读取一些整体的相似性测量信息：譬如在不同的目标名人之间的比较评级，以及通过对这些伟人的维基百科页面进行词袋模型分析，来对文本信息相似性的评估。因为这些测量的形式都是反向编码（比如距离），因此我们会反转他们来得到这些信息的相似性。
 ```{r}
 holdists <- read.csv("holdists.csv")
 explicit <- 100-holdists$holistic
