@@ -1,5 +1,5 @@
 ---
-title: "Representational similarity analysis (MIND 2018)"
+title: "表征相似性分析 (MIND 2018)"
 author: "Mark A. Thornton, Ph. D."
 date: "August 1, 2018"
 output: html_notebook
@@ -9,25 +9,23 @@ output: html_notebook
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Introduction to RSA
+## RSA 方法介绍
 
-Representational similarity analysis (RSA) is statistical technique based on analyzing second-order isomorphisms. That rather than directly analyzing the relationship between one measure and another, RSA instead computes some measure of similarity within each measure and then compares these similarities to each other. RSA was pioneered by [Kriegeskorte, Mur, and Bandettini (2008, Frontiers in System Neuroscience)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2605405/) and has since become a popular method for analyzing neuroimaging data. Much of this popularity is driven by the fact that - because RSA focuses on second-order isomorphisms (i.e., similarities) - it is an incredibly flexible analytic technique, capable linking disparate measures of brain and behavior.
+表征相似性分析（RSA）是一种基于二阶同构（second-order isomprhisms）的 fMRI 数据分析方法。这种方法并不是直接分析某个测量数据和另一个测量数据之间的关系，而是计算某个测量数据与其他数据之间的相似性，并进一步比较这些相似性数据。RSA 方法由 [Kriegeskorte, Mur, and Bandettini (2008, Frontiers in System Neuroscience)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2605405/) 在 2008 年开创，并从此成为了分析神经成像数据的流行方法。本方法之所以能够变得非常流行，是因为RSA方法使用二阶同构进行分析，这种令人惊叹的分析技术可以将不同类型的脑成像、行为数据等研究数据联系起来。
 
 ![Kriegeskorte, Mur, and Bandettini (2008)](http://www.mrc-cbu.cam.ac.uk//personal/nikolaus.kriegeskorte/fig5_kriegeskorte_RSA_FNS.gif)
 
-In the context of fMRI, RSA usually takes the form of a correlation or regression between neural pattern similarity and a task, rating, or model. In this tutorial we will learn how to conduct these confirmatory RSAs as well as how
-to perform complementary exploratory analyses.
-
-## How to measure similarity?
-
-There are many ways to measure the similarity (or distance) between data objects. While the nature of the data in question partially constrains which metrics are appropriate, often we are still left with a choice of several different distance metrics for measuring a space. This section will explore distance metrics with the aim of building intuition for how to make such choices.
-
-The most common distance metrics used to measure similarity in fMRI data are mean distance, Euclidean distance, and correlation distance. In this section, we will simulate some data to illustrate the relationships between these difference metrics.
+在 fMRI 的分析过程中使用 RSA 方法，常常是需要在神经活动模式的相似性与任务、评分或者模型之间计算相关或者回归。在这个教程当中，我们会学习如何使用 RSA 进行验证性或探索性分析。
 
 
+## 如何测量相似性？
+
+有很多种方法可以计算不同的数据对象之间的相似性（或者是差异距离）。虽然数据的本质会约束我们选择合适的方法，我们在线性空间当中衡量距离仍然有着很多种选择。这一节我们会讨论不同的距离度量，以使我们对最终作出的选择产生直观的感受。
+
+对于fMRI数据，我们常常用来衡量相似性的是距离是平均距离、欧式距离和相关距离。本节我们会使用一些数据来模拟这些距离，展示这些不同的距离衡量方式之间的关系。
 
 ```{r, echo=F, results="hide", include=F}
-# load packages
+# 载入需要的包
 if(!require(MASS)) install.packages("MASS"); require(MASS)
 if(!require(lattice)) install.packages("lattice"); require(lattice)
 if(!require(rasterVis)) install.packages("rasterVis"); require(rasterVis)
@@ -39,12 +37,18 @@ if(!require(Rtsne)) install.packages("Rtsne"); require(Rtsne)
 ```
 
 ```{r}
-# data generation
+# 生成数据
 set.seed(1)
-sigmat <- matrix(c(1,0,.8,0,0,1,0,.8,.8,0,1,0,0,.8,0,1),nrow=4)
-dat <- mvrnorm(200,c(0,0,1,1),Sigma = sigmat)
+sigmat <- matrix(c(1,0,.8,0,0,1,0,.8,.8,0,1,0,0,.8,0,1),nrow=4) # 生成协方差矩阵
 
-# plot data
+# 生成四组均值分别为（0，0，1，1），协方差为 sigmat 的随机数
+dat <- mvrnorm(200, c(0,0,1,1), Sigma = sigmat) 
+
+sigmat
+# sigmat 是生成数据的协方差
+# 所以我们知道 1与3，2与4之间存在较高相关
+
+# 绘制生成的随机数的图形
 layout(matrix(1:4,2,2))
 for (i in 1:4){
   plot(dat[,i],type="o",pch=20,ylim=c(-4,4),ylab="Activity",xlab=paste("Condition",as.character(i)))
@@ -52,65 +56,70 @@ for (i in 1:4){
 
 ```
 
-The data we've simulated here isn't particularly realistic, but it is ideally suited to display the differences between the three distance metrics in question. You can think of each of the four variables as the mean activity
-in a given condition in an fMRI experiment, across a 200 voxel region.
+我们在这里模拟生成的数据并不符合真实情况，但是它非常适合用来呈现本问题中三种不同距离度量的差异。你可以把这四个变量看作是在一个 fMRI 实验当中，四种不同的实验条件下大脑的200个体素的激活数据。
 
-### Mean distance
-We'll begin by calculating mean distance - which is simply the differences in means between the four conditions. This metric discards any information in the pattern across voxels, and is most similar to a standard univariate fMRI analysis. The bar graph and heatmap below illustrate how these means differ.
+### 平均距离（均值差异）
+
+我们将首先开始计算平均距离 - 仅仅是这四种条件的均值的差异。这种测量方式会舍弃体素之间模式的全部信息，而且非常类似于标准的单变量 fMRI 分析。下方的棒状图和热图反映了这个均值差异。
 
 ```{r}
-# mean distance
-cmeans<-apply(dat,2,mean) # calculate means of each variable (object)
-barplot(cmeans) # plot means
-dmat1<-as.matrix(dist(cmeans)) # calculate distance between means
+# 平均距离 mean distance
+
+# 计算每个变量（数据对象）的平均值
+# 每列代表一个变量（实验条件）下的数据，apply 函数使用参数 2 表示每个纵列
+# 所以是对每个变量求均值
+
+cmeans <- apply(dat,2,mean) 
+barplot(cmeans) # 绘制均值
+dmat1 <- as.matrix(dist(cmeans)) # calculate distance between means
 levelplot(dmat1) # heatmap of distances
 ```
 
-### Euclidean distance
-Next we'll examine Euclidean distance. This distance corresponds to the "real" distance we use most frequently in our everyday lives. The twist is that, instead of the familiar 3-D space we all inhabit, here we're calculating Euclidean distance in an N-dimensional space, where N = # of voxels (in this case, 200). The heatmap and scatter plot matrix below illustrates the Euclidean distance between the four conditions.
+我们还记得我们刚才生成随机数的函数中的参数吧？其中第二个参数反映了生成变量的均值。因此我们可以看到第一第二变量的均值相近，第三第四变量的均值相近。故本图的含义很容易理解。
+
+### 欧式距离
+
+接下来我们将介绍欧式距离。欧式距离可以对应为我们常常在现实生活中所见到的“真实距离”。略微不同的是，相比于我们以前熟悉的在3维空间当中计算距离，在这里我们是要对N维空间的欧式距离进行计算。本例当中，N维空间的N是指 Voxel 的数量（即200个）。下面的热图和散点图反映了这四个条件的欧式距离。
 
 ```{r}
-# Euclidean distance
+# 欧式距离 Euclidean distance
 dmat2 <- as.matrix(dist(t(dat)))
 levelplot(dmat2)
-pairs(dat)
+pairs(dat) # ？这样的 scatter plot 能反映距离吗？应该是在多维度上进行表征的才是距离。
 ```
+### 相关距离
+相关距离可能是在 fMRI 分析当中最常用的距离了。这种距离完全舍弃了均值（数据在求相关时已经相当于进行了 z 分数化，否则的话那就是协方差分析了）。因为相关是用来描述相似性而非不一致性的，所以“距离”这个概念我们可以简单地把相关值“翻转”一下，用 1 - R 来表示。我们再次使用热图来描述这个结果。
 
-### Correlation distance
-Correlation distance is perhaps the most common metric used in fMRI analysis. This metric discards the mean completely (data are implicitly z-scores prior to correlation, or else it's just covariance) so all information comes from the pattern instead. Since correlation is naturally a similarity rather than dissimilarity measure, the  "distance" part is basically just a sign flip: 1-R. Again, the heatmap illustrates the results.
 
 ```{r}
-# correlation distance
-dmat3 <- 1-cor(dat)
+# 相关距离 correlation distance
+dmat3 <- 1 - cor(dat)
 levelplot(dmat3)
 ```
 
-### Comparing distance metrics
-Now let's put these three distance metrics together. In the heatmaps below, you can see the lawful relationship between the three: mean and correlation distance are completely orthogonal to each other, but both "contribute" to the Euclidean distance. Correlation distance tends to be preferred because RSA (and MVPA in general) is often done in direct contrast to univariate analyses. Since the univariate analyses already reflect mean distance, it makes sense to over orthogonal information using correlation distance when doing RSA. However, if you're simply seeking an agnostic measure of neural similarity, and don't particularly care whether it is drive by the mean or the pattern, Euclidean distance might be a good bet.
+### 比较距离的测量方式
+
+现在让我们来比较一下三种距离的测量方式。在下面的热图中，我们可以看到三者之间的关系：均值和相关距离之间完全无关，但是两者对欧氏距离有着贡献。相关距离可能是最佳的选择，因为在做 RSA 方法和一般的 MVPA 方法前，常常已经完成了多变量分析。因为多变量分析本身已经能够反映平均距离，所以在做 RSA 的时候，舍去均值信息是有意义的。然而，如果你只是正在对神经相似性进行简单的探索，同时对是均值还是模式导致差异并不太过关心，那么欧式距离也许是一个好的选择。
 
 ```{r}
 # combined plot
-dmat2<-dmat2/max(dmat2)
-rlist <- list(raster(dmat1),raster(dmat2),raster(dmat3))
-names(rlist)<-c("Mean","Euclidean","Correlation")
-levelplot(stack(rlist),layout=c(3,1),at=seq(0,1,.01))
-
+dmat2 <- dmat2/max(dmat2)
+rlist <- list(raster(dmat1), raster(dmat2), raster(dmat3))
+names(rlist) <- c("Mean","Euclidean","Correlation")
+levelplot(stack(rlist),layout = c(3,1),at = seq(0,1,.01))
 ```
 
-Does this result mean that measuring neural similarity with correlations allows you to completely remove univariate signal from your results? Unfortunately not. In this toy example, we knew the exact borders of our region of interest. In reality, it will never be that clean: activity/patterns will be aliased with respect to your feature selection. For example, imagine that there is a single active blob in your data, but your region of interest is a bit too big and therefor the blob only fills 80% of the ROI. The remaining 20% of voxels will not change their activity across conditions. In the process, the difference between these two populations of voxels will induce correlations - as well as just mean activity differences - across conditions. Again, this might not matter depending on the conclusion you want to draw, but if your conclusion relies heavily on the results not being driven by univariate signal, this is bad news.
+这个结果是否意味着使用相关来衡量神经相似性，可以使你的结果完全不受单变量分析方法的影响呢？很可惜并不是这样的。在这个简单的例子中，我们知道我们兴趣区的确切边界。然而在实际情况下，边界并不会这么清晰：激活模式与你选择的特征有关。举个例子来说，想象一下你的数据当中只有一个激活的团块，但是你的兴趣区非常的大，而这个团块只能填满这个兴趣区的 80%。剩下 20% 的体素在条件间则不会出现激活模式的改变。那么按照上面的方式进行分析，这两个体素群的差异同样会导致条件间相关性的存在——尽管在平均激活上是存在差异的。所以我再重申一下，单变量信息也许与你最后想要画的图没有关系，但是如果你的结论与非单变量分析的结果有着极强的联系，那么这对你来说也许不是一个好消息。
 
-## RSA: NHST, effect sizes, cross-validation, and model selection
+## RSA方法：NHST，效应量，交叉验证，模型选择
 
-In this section, we will introduce RSA proper, and deal with some core issues surrounding it. In particular, we will examine how to test the significance of RSA results at the item-analysis and group levels. We will also hear a couple caveats about RSA effect sizes, and learn how to perform cross-validation and model selection.
+本节我们会简单介绍 RSA 方法，并且围绕着它处理一些问题。特别是，我们将会演示如何在个体水平和组水平上检验 RSA 结果的意义。我们同样会了解到 RSA 的效应量方面的一系列的注意事项，同时学到如何进行交叉验证和模型选择。
 
-Instead of the toy data used above, for this section we will turn to real fMRI, rating, and text data from a previous study: [Thornton & Mitchell, 2017, Cerebral Cortex](http://markallenthornton.com/cv/Thornton&Mitchell_CC_2017.pdf). In this study, participants performed a social judgment task in which they mentalized about 60 famous people. On each trial, participants would judgment how well a particular statement, such as "would like to learn karate," would apply to a particular target person, such as Bill Nye. This procedure repeated across the course of the study, fully crossing the 60 targets with 12 items. After preprocessing, the GLM was used to average across all trials featuring the same target person. The resulting regression coefficient patterns were z-scored by voxel to remove the influence of the global background pattern, and then correlated with each other to estimate their similarity. That's where we start.
-
+不同与我们上面所做的那个像玩具一样的例子，本节我们会使用一个真正的 fMRI 研究数据。本数据来源于过去的一项研究。 [Thornton & Mitchell, 2017, Cerebral Cortex](http://markallenthornton.com/cv/Thornton&Mitchell_CC_2017.pdf) 在本研究中，被试需要完成一项社会判断任务，对大约 60 位名人进行评分。在每次试验中，参与者都会判断特定的陈述（例如“他想要学习空手道”）对特定人物（例如 Bill Nye）的适用程度。在整个研究过程中反复重复该过程，直到对60个目标在12个项目下进行评分。在预处理之后，使用 GLM 对相同目标人物在不同实验条件下的试次进行平均。得到每个体素上的回归参数模式，经过 z 分数化来排除全局背景模式的影响，随后使用相关来计算体素之间的相似性。这是本例开始的地方。
 
 ![Regions of reliability target person-related activity, within which we analyze patterns](http://markallenthornton.com/images/pmap.png)
 
-First, we'll read in the estimates of neural pattern similarity we want to predict. These data consist of vectorized (lower-triangular)
-correlation matrices between z-scored patterns within the set of voxels in the figure above.
-
+首先，我们将会读取我们想要预测的神经模式一致性的预估结果。这个数据由上图所示的体素当中，经过 z 分数化的激活模式数据之间的向量化相关矩阵组成。
 ```{r}
 # load neural data
 ndat <- read.csv("neural_pattern_similarity.csv")
@@ -120,7 +129,7 @@ dim(ndat)
 nsim <- rowMeans(scale(ndat))
 ```
 
-Next we'll load in a set of trait dimensions on which separate participants rated the famous target people:
+我们接下来则会载入一系列特征数据，是单个被试对名人进行的评分：
 
 ```{r fig.height=10, fig.width=8}
 

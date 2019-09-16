@@ -22,10 +22,20 @@
 
 **step2**
 
-将本仓库克隆到你到本地设备。或直接在该页面点击 “Clone or download” 绿色按钮，然后选择 “Download ZIP” 到本地。解压后使用 RStudio 打开"Representational_similarity_analysis_Chinese_edition.Rmd" 文件。选择编辑器右上角的 Run” 菜单中的 “Run ALL” 按钮。
+将本仓库克隆到你到本地设备。或直接在该页面点击 “Clone or download” 绿色按钮，然后选择 “Download ZIP” 到本地。解压后使用 RStudio 打开 "Representational_similarity_analysis_Chinese_edition.Rmd"  文件。选择编辑器右上角的 Run” 菜单中的 “Run ALL” 按钮。
 
 你同样可以选择文件夹中的 “表征相似性分析示例.html” 文件打开，这是我已经编译好的版本。
 
 ### 补充知识
 
-二阶同构
+二阶同构(second-order isomprhisms)
+
+*注：由于二阶同构是 RSA 分析的一个较为核心的概念，因此认为需要对该概念进行解释，以便对该方法有较为深入的了解。但是目前查到的资料大多偏于数学，因此为了适用于心理学专业的学生阅读，在此我对概念进行了简化，并补充了少量解释。这有可能导致错误，如有疏漏，欢迎提交 PR ！*
+
+**同构**
+
+同构是一个抽象代数当中的概念。本概念是指两个数学对象之间存在一个保持结构的双射，而双射则是指一个在两个集合之间存在一个映射关系，且该关系既能满足两个集合的元素一一对应（单射），同时又能保证每一个元素都存在该映射关系（满射）。
+
+具体来讲，在做 RSA 分析时，我们可能会将两个 ROI 或两个 Voxel 之间的 BOLD 信号求解相关（或不一致性），则此时即存在映射函数 $BOLD_{ROI_{2}} = \beta \cdot BOLD_{ROI_{1}} + \xi$ 。此时我们可知这两个 BOLD 信号间存在一个同构关系。
+
+RSA 分析的基本逻辑是将
