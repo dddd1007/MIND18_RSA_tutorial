@@ -1,5 +1,5 @@
 ---
-title: "表征相似性分析 (MIND 2018)"
+title: "表征相似性分析教程"
 author: "Mark A. Thornton, Ph. D."
 date: "August 1, 2018"
 output: html_notebook
@@ -8,6 +8,13 @@ output: html_notebook
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+## 教程介绍
+
+Ver. 0.001 beta 
+
+本教程翻译自 Mark A. Thornton 博士在宾大夏令营的 RSA tutorial 。为了便于理解，**本文中夹带了大量补充信息，包括技术细节的解释和实验设计的描述，同时未于原文作明确区分**，在此注明。
+
+欢迎提交 issue 指出本文仍然没有解释清楚的地方，我会对本文持续迭代。
 
 ## RSA 方法介绍
 
@@ -177,15 +184,11 @@ cor(nsim,explicit,method = "spearman")
 
 ### Null hypothesis significance testing
 
-How can we tell if this correlation is statistically significant? A parametric correlation test assumes that every observation is independent, and will thus give us a fixed-effects p-value.
-
 我们如何判断这个相关是否统计显著呢？做一个独立样本相关参数检验能够给我们一个固定效应的 p 值。
 
 ```{r}
 cor.test(nsim,explicit)
 ```
-
-We can see that the results of this test are wildly significant (i.e., p = 0 to within machine precision). However, if are stimuli are just s small sample from a large population, we may want a p-value that reflects the dependencies in the similarity matrices. To achieve this, we can instead use a permutation test. As with any permutation test, it is important that we permute at the level of independent observations. In this case, that means permuting the rows and columns of one of our similarity matrices with respect to the other.
 
 我们能够看到检验的结果非常的显著。然而，如果我们的模拟练习仅仅是从大量数据当中获取的一个小样本，我们也许希望结果是一个能够反映相似性矩阵依赖性的 p 值。为了实现这一目标，我们可以使用置换检验。正如我们平常使用的置换检验一样，在独立样本水平上进行置换十分重要。在本例当中，这意味着我们需要对不同的相似性矩阵之间的行列之间进行互换。
 
@@ -240,71 +243,75 @@ segments(30,quantile(bootres,.975),30,quantile(bootres,.025),col="red",lwd=2)
 abline(h=0)
 ```
 
-Note that the correlation is greater than zero for all but one participant in this data set, so formal NHST is scarcely necessary to reject the null hypothesis. 
-
 注意几乎所有的相关值都大于0，只有一个被试的相关值是小于0的，因此 NHST 无需拒绝零假设。
 
 尽管在组水平上分析数据能够让我们来推断总体，但是最佳的 NHST 方法应该能让我们对被试和项目层面都能进行随机效应分析（对所有对自变量的随机截距和随机斜率都进行分析）。然而不幸的是，由于相似性矩阵的随机效应结构的复杂性，最佳的最大随机效应模型非常难以收敛。因此对于大多数的 RSA 分析来说，几乎不可能得到最为正确的 NHST 结果。然而还有一些备选方案，比如 [感染率推断](https://arxiv.org/abs/1512.00810) 。另一种选择是使用贝叶斯统计，因为贝叶斯混合效应模型有时能够收敛最小二乘法无法收敛的模型。这些选择已经超出了本教程所要介绍的范围，但是后面我们会谈一下另一种解决这个问题的方式：交叉验证。
 
 ### 效应量
 
-Effect sizes in RSA are relatively straight-forward. For item-level analyses like the first one we examined, the effect size is simply the correlation between the two similarity measures. However, it's worth bearing in mind the reliability of your measures when you do so. Neural data can often be quite noisy, and this can make it appear as if the association between neural similarity and another measure is smaller than it really is. One way to deal with this is through correlation disattenuation:
+效应量在 RSA 中相对比较简单直接。就像我们之前所做的，在项目水平上的分析，效应量就是两个相似性测量变量之间的相关而已。然而，当你做这个分析的时候，考虑你的测量数据的信度仍然是一件有意义的事情。神经测量数据往往混杂有大量的噪声，这常常会导致它与其他测量数据之间计算相似性的时候，得到的结果比真实情况更小。解决这个问题的其中一种办法是衰减校正，即在分析中消除测量误差对相关结果的衰减作用（Jensen，1998）：
 
 ```{r}
-# compute raw correlation
+# 计算原始相关系数
 cor(nsim,explicit)
-# compute inter-participant Cronbach's alpha for neural data
+# 计算成像数据中被试间的 Cronbach alpha 系数
 rel <- alpha(ndat)
-# standardized alpha
+# 呈现标准化alpha系数
 rel$total$std.alpha
-# compute disattenuated correlation
+# 校正相关衰减
 cor(nsim,explicit)/sqrt(rel$total$std.alpha)
 ```
 
-In this example, the correlation between neural and explicit similarity increased from 0.4 to 0.56 when we adjusted for the mediocre reliability of the neural data. The same could be done for the ratings, if we had the individual participant data from which to calculate its reliability. Note only the raw correlation should be used for NHST purposes. Also, remember that the reliability we calculated is only an estimate of the true variance in the data. When that estimate itself is noisy (e.g., with small samples) it clean lead to nonsensical results, like correlations greater than one. Thus, although this approach can be helpful, it should be applied with caution.
+我们的计算当中涉及到科隆巴赫 α 系数，这是在心理测量学中最常用的信度评估信度工具，用以检验测量工具的内部一致性。该值越高则表明测量工具有着较高的内部一致性，测量工具的信度也就越高。在这里衡量的就是我们的脑成像测量结果的稳健性。
 
-There is another reason besides reliability why RSA correlations might be smaller than they should be: converting raw data into a similarity matrix inherently discards information. As a result, on average an RSA correlation will be the square-root of the correlation in the underlying dimensions used to create the similarity matrices.
+在本例当中，当我们校正了神经测量数据的糟糕的信度，神经元和外显比较分数之间的的相关从 0.4 增长到 0.56 。如果我们用被试个体数据来计算其信度，则可以对评级分数进行相同的计算。注意只有原始相关系数能够用于 NHST 分析。同样需要记得的是我们在这里计算的数据的信度仅仅是数据的变异性。当估计数据本身就是充满噪声的（比如小样本数据），那么必定得到较差的结果。因此，尽管这种方法是有效的，然而在应用的时候仍需注意。
+
+除了测量信度的问题外，还有另一个原因可能导致 RSA 计算得到的相关小于他们真实的结果：将原始数据转换为相似性矩阵会导致信息量的衰减。平均来说， RSA 分析得到的相关度将会是背后多维度数据相关度的平方根。
 
 ![](http://markallenthornton.com/images/rsacor.png)
 
-If you care about variance-explained in similarities themselves, then this isn't really a problem. However, if you care more about variance in the variables underlying your similarity estimates, you could arguably improve you effect size estimates by taking the square root of the RSA correlations you obtain.
+如果你关心表征相似性中差异性的解释本身，那这些并不是一个重要的问题。但是如果你关心的是在相似性背后那些变量的变异性，那么你可以通过对你做的 RSA 相关取平方根来估计你的效应量。
 
-#### Group level effect sizes
+#### 组水平的效应量
 
-At the group level, we can calculate familiar test-statistics like Cohen's d.
+在组水平上，我们可以通过计算 Cohen's d 值来计算效应量。
 
 ```{r}
-# Compute Cohen's d
+# 计算 Cohen's d
 mean(atanh(ncors))/sd(atanh(ncors))
 ```
 
-Here, for instance, we can see that the Cohen's d for the association between explicit similarity ratings and neural similarity is 2.16. The standard rule of thumb for Cohen's d states that a "large effect" is 0.8, so at 250%+ of that, we've got a whopper here!
+在这个例子中，我们能够看到总体评分和神经活动的相似性之间的 Cohen's d 值是 2.16. 根据标准，当 Cohen's d 值大于 0.8 时，我们可以说“大效应量”。我们得到的是这个值的 2.5 倍，因此我们得到了一个巨巨大的效应量。 
 
-It's also possible to estimate a wide-range of other standardized effect size measures in the context of RSAs based multiple regressions or mixed effects models. However, those measures aren't RSA-specific, so won't consider them here.
+在基于多元回归或混合效应模型的 RSA 中，还可以估计广泛的其他标准化效应量。但是，这些措施不是仅对应于 RSA 的，所以在这里不予考虑。
 
-### Cross-validation
+### 交叉验证 Cross-validation
 
-Significance testing offers some nice hypothetical guarantees about inference to a population. However, cross-validation offers a much more concrete way of assessing how well your model can actually predict new data. In cross-validation, a model is trained on some subset of data, and then tested on left-out data, iteratively treating each subset as test and training set. Let's conduct a cross-validated multiple regression RSA, predicting neural similarity from explicit ratings and text!
+显著性检验能够提供对总体数据的推断可靠的验证。然而，交叉验证方法能能够提供更稳健的方法来评估你的模型在多大程度上能够对你的数据进行预测。在交叉验证中，我们会使用一部分数据训练一个模型，随后用剩下对数据来进行检验，重复这个过程对数据对子集反复进行训练和检验。让我们来进行一个基于交叉验证对多重回归 RSA，计算总体评价和文本信息，对于神经表征的相似性。
 
 ```{r fig.height=7, fig.width=7}
-# plot item-level scatterplot matrix
-pairs(data.frame(neural=nsim,explicit,text),pch=20)
+# 配对绘制项目水平上的散点图
+pairs(data.frame(neural = nsim,explicit,text),pch = 20)
 
-# rescale neural similarities to positive values
-ndatp <- ndat-min(ndat)
+# 对神经测量数据进行标准化，使得所有值均为正值
+ndatp <- ndat - min(ndat)
 
-# conduct leave-one-participant-out cross-validation
+# 进行留一交叉验证
+
+# 使用整体评分和文本分数定义一个矩阵，后面使用非负最小二乘法求解，这里的1相当于定义截距
 xvars <- cbind(1,explicit,text)
 nsub <- dim(ndat)[2]
-cvperf <- rep(NA,nsub)
-for (i in 1:nsub){
-  fit <- nnls(xvars,rowMeans(ndatp[,-i])) # fit using non-negative least squares
+cvperf <- rep(NA,nsub) # 定义迭代中计算得到的相关性结果变量
+for (i in 1:nsub) {
+  fit <- nnls(xvars,rowMeans(ndatp[,-i])) # 使用非负最小二乘法估计
+  # nnls 函数使用 Lawson-Hanson NNLS 方法，计算 ndat[， -1] 在 xvars 上的投影 fit$fitted
+  # fit$fitted相当于除去了噪声的最佳估计值
   cvperf[i] <- cor(fit$fitted,ndatp[,i])
 }
 mean(cvperf)
-
 ```
-Here we can see that together, these two predictors can achieve a cross-validated performance of r = .11. Note that there are many other measures for assessing such performance, such as RMSE (root-mean-square-error), but correlation is a relatively interpretable choice. However, how can we contextual this performance? An r = .11 is obviously not great in absolute terms, but what's the best we could have done? We can answer this by calculating a noise ceiling. In this context, that simply means the average correlation between each participant and the average of the other participants.
+
+我们在这里可以看到，这两个预测变量在做交叉验证后，得到的模型性能结果 r 为 0.11. 注意这时我们可以有很多变量来描述模型性能，例如均方根误差 RMSE 等等，但是相关值是相当容易被解释的。然而，我们如何解释这个模型性能呢？r = 0.11 明显看起来不是一个很好的结果，但是我们能得到的最好的结果是怎样的呢？我们可以通过计算一个噪声上限来回答这个问题。噪声上限（noise ceiling）是指预测变量能够解释的最大程度。在这个情境下，噪声上限是每个个体和其他个体的平均值之间的相关。（小夏注：这个概念称为 noise ceiling 我感觉容易误导，如果称为 predict ceiling 也许更好一些）。
 
 ```{r fig.height=7, fig.width=7}
 noise <- rep(NA,nsub)
@@ -312,10 +319,12 @@ for (i in 1:nsub){
   noise[i] <- cor(ndat[,i],rowMeans(ndat[,-i]))
 }
 mean(noise) # noise ceiling
-mean(cvperf)/mean(noise) # performance as fraction of noise ceiling
+mean(cvperf)/mean(noise) # 对噪声上限的解释度
 ```
 
 The noise ceiling for this data is only r = 0.129. This means that, given the amount of heterogeneity between participants, even a hypothetical perfect model couldn't do better than r = 0.129. If we divide our actual performance by the noise ceiling, we can see that together, explicit ratings and textual similarity achieve 86% of the performance of a perfect theory. Although the calculations are somewhat different due to the cross-validation, you might realize that what we've just done is conceptually the same as the correlation disattenuation we performed earlier. Thus, although noise ceilings can be helpful, they should be interpreted with a grain of salt because they are only estimates and they carry their own assumptions with them. For instance, in the example above, we're implicitly assuming that all meaningful variance is at the group level (i.e., there are no meaningful idiosyncrasies), which is almost certainly not true. 
+
+本数据的噪声上限只有 0.129，这意味着在给定的被试间差异性当中，理论上最佳模型的解释度不会超过 0.129. 如果将我们做交叉验证得到的结果和噪声上限相除，我们能够看到，这两个变量能够达到最佳模型 86% 的解释度。虽然在计算方法上有些不同，但你可能会意识到我们刚刚所做的交叉验证在概念上与我们之前执行的相关性衰减相同。因此，尽管噪声上限对理解我们对结果可能有所帮助，但是我们仍然需要对它抱有怀疑，因为它们只是估计值，并且有着前提假设假设。例如，在上面的例子中，我们存在一个潜在假设，所有有意义的变异都在组水平上（我们把被试的神经测量信号平均了），这几乎是不可能的。
 
 More generally, using different cross-validation schemes can be very useful for estimating generalization across different "boundaries" in your data. In the example above, we only cross-validated with respect to participants, but in the case below, we also cross-validate with respect to mental states.
 
