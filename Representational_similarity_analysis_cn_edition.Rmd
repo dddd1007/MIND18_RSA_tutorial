@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 ## 教程介绍
 
-Ver. 0.001 beta 
+Ver. 0.1 beta 
 
 本教程翻译自 Mark A. Thornton 博士在宾大夏令营的 RSA tutorial 。为了便于理解，**本文中夹带了大量补充信息，包括技术细节的解释和实验设计的描述，同时未于原文作明确区分**，在此注明。
 
@@ -20,20 +20,19 @@ Ver. 0.001 beta
 
 欢迎提交 issue 指出本文仍然没有解释清楚的地方，我会对本文持续迭代。
 
-## RSA 方法介绍
+## 1. RSA 方法介绍
 
 表征相似性分析（RSA）是一种基于二阶同构（second-order isomprhisms）的 fMRI 数据分析方法。这种方法并不是直接分析某个测量数据和另一个测量数据之间的关系，而是计算某个测量数据与其他数据之间的相似性，并进一步比较这些相似性数据。RSA 方法由 [Kriegeskorte, Mur, and Bandettini (2008, Frontiers in System Neuroscience)](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2605405/) 在 2008 年开创，并从此成为了分析神经成像数据的流行方法。本方法之所以能够变得非常流行，是因为RSA方法使用二阶同构进行分析，这种令人惊叹的分析技术可以将不同类型的脑成像、行为数据等研究数据联系起来。
 
-![Kriegeskorte, Mur, and Bandettini (2008)](http://www.mrc-cbu.cam.ac.uk//personal/nikolaus.kriegeskorte/fig5_kriegeskorte_RSA_FNS.gif)
+![Kriegeskorte, Mur, and Bandettini (2008)](https://camo.githubusercontent.com/145331f874ae96bf99ce3cd124e702f5dee9ac34/687474703a2f2f7777772e6d72632d6362752e63616d2e61632e756b2f2f706572736f6e616c2f6e696b6f6c6175732e6b7269656765736b6f7274652f666967355f6b7269656765736b6f7274655f5253415f464e532e676966)
 
 在 fMRI 的分析过程中使用 RSA 方法，常常是需要在神经活动模式的相似性与任务、评分或者模型之间计算相关或者回归。在这个教程当中，我们会学习如何使用 RSA 进行验证性或探索性分析。
 
-
-## 如何测量相似性？
+## 2. 如何测量相似性？
 
 有很多种方法可以计算不同的数据对象之间的相似性（或者是差异距离）。虽然数据的本质会约束我们选择合适的方法，我们在线性空间当中衡量距离仍然有着很多种选择。这一节我们会讨论不同的距离度量，以使我们对最终作出的选择产生直观的感受。
 
-对于fMRI数据，我们常常用来衡量相似性的是距离是平均距离、欧式距离和相关距离。本节我们会使用一些数据来模拟这些距离，展示这些不同的距离衡量方式之间的关系。
+对于fMRI数据，我们常常用来衡量相似性的是距离是**平均距离、欧式距离和相关距离**。本节我们会使用一些数据来模拟这些距离，展示这些不同的距离衡量方式之间的关系。
 
 ```{r, echo=F, results="hide", include=F}
 # 载入需要的包
@@ -50,7 +49,7 @@ if(!require(Rtsne)) install.packages("Rtsne"); require(Rtsne)
 ```{r}
 # 生成数据
 set.seed(1)
-sigmat <- matrix(c(1,0,.8,0,0,1,0,.8,.8,0,1,0,0,.8,0,1),nrow=4) # 生成协方差矩阵
+sigmat <- matrix(c(1,0,.8,0,0,1,0,.8,.8,0,1,0,0,.8,0,1),nrow = 4) # 生成协方差矩阵
 
 # 生成四组均值分别为（0，0，1，1），协方差为 sigmat 的随机数
 dat <- mvrnorm(200, c(0,0,1,1), Sigma = sigmat) 
@@ -61,15 +60,14 @@ sigmat
 
 # 绘制生成的随机数的图形
 layout(matrix(1:4,2,2))
-for (i in 1:4){
-  plot(dat[,i],type="o",pch=20,ylim=c(-4,4),ylab="Activity",xlab=paste("Condition",as.character(i)))
+for (i in 1:4) {
+  plot(dat[,i],type ="o",pch=20,ylim=c(-4,4),ylab="Activity",xlab=paste("Condition",as.character(i)))
 }
-
 ```
 
-我们在这里模拟生成的数据并不符合真实情况，但是它非常适合用来呈现本问题中三种不同距离度量的差异。你可以把这四个变量看作是在一个 fMRI 实验当中，四种不同的实验条件下大脑的200个体素的激活数据。
+我们在这里模拟生成的数据并不符合真实情况，但是它非常适合用来呈现本问题中三种不同距离度量的差异。你可以把这四个变量看作是在一个 fMRI 实验当中，四种不同的实验条件下大脑的 200 个体素的激活数据。
 
-### 平均距离（均值差异）
+### 2.1 平均距离（均值差异）
 
 我们将首先开始计算平均距离 - 仅仅是这四种条件的均值的差异。这种测量方式会舍弃体素之间模式的全部信息，而且非常类似于标准的单变量 fMRI 分析。下方的棒状图和热图反映了这个均值差异。
 
@@ -88,7 +86,7 @@ levelplot(dmat1) # heatmap of distances
 
 我们还记得我们刚才生成随机数的函数中的参数吧？其中第二个参数反映了生成变量的均值。因此我们可以看到第一第二变量的均值相近，第三第四变量的均值相近。故本图的含义很容易理解。
 
-### 欧式距离
+### 2.2 欧式距离
 
 接下来我们将介绍欧式距离。欧式距离可以对应为我们常常在现实生活中所见到的“真实距离”。略微不同的是，相比于我们以前熟悉的在3维空间当中计算距离，在这里我们是要对N维空间的欧式距离进行计算。本例当中，N维空间的N是指 Voxel 的数量（即200个）。下面的热图和散点图反映了这四个条件的欧式距离。
 
@@ -98,9 +96,9 @@ dmat2 <- as.matrix(dist(t(dat)))
 levelplot(dmat2)
 pairs(dat) # ？这样的 scatter plot 能反映距离吗？应该是在多维度上进行表征的才是距离。
 ```
-### 相关距离
-相关距离可能是在 fMRI 分析当中最常用的距离了。这种距离完全舍弃了均值（数据在求相关时已经相当于进行了 z 分数化，否则的话那就是协方差分析了）。因为相关是用来描述相似性而非不一致性的，所以“距离”这个概念我们可以简单地把相关值“翻转”一下，用 1 - R 来表示。我们再次使用热图来描述这个结果。
 
+### 2.3 相关距离
+相关距离可能是在 fMRI 分析当中最常用的距离了。这种距离完全舍弃了均值（数据在求相关时已经相当于进行了 z 分数化，否则的话那就是协方差分析了）。因为相关是用来描述相似性而非不一致性的，所以“距离”这个概念我们可以简单地把相关值“翻转”一下，用 1 - R 来表示。我们再次使用热图来描述这个结果。
 
 ```{r}
 # 相关距离 correlation distance
@@ -108,7 +106,7 @@ dmat3 <- 1 - cor(dat)
 levelplot(dmat3)
 ```
 
-### 比较距离的测量方式
+### 2.4 比较距离的测量方式
 
 现在让我们来比较一下三种距离的测量方式。在下面的热图中，我们可以看到三者之间的关系：均值和相关距离之间完全无关，但是两者对欧氏距离有着贡献。相关距离可能是最佳的选择，因为在做 RSA 方法和一般的 MVPA 方法前，常常已经完成了多变量分析。因为多变量分析本身已经能够反映平均距离，所以在做 RSA 的时候，舍去均值信息是有意义的。然而，如果你只是正在对神经相似性进行简单的探索，同时对是均值还是模式导致差异并不太过关心，那么欧式距离也许是一个好的选择。
 
@@ -122,27 +120,37 @@ levelplot(stack(rlist),layout = c(3,1),at = seq(0,1,.01))
 
 这个结果是否意味着使用相关来衡量神经相似性，可以使你的结果完全不受单变量分析方法的影响呢？很可惜并不是这样的。在这个简单的例子中，我们知道我们兴趣区的确切边界。然而在实际情况下，边界并不会这么清晰：激活模式与你选择的特征有关。举个例子来说，想象一下你的数据当中只有一个激活的团块，但是你的兴趣区非常的大，而这个团块只能填满这个兴趣区的 80%。剩下 20% 的体素在条件间则不会出现激活模式的改变。那么按照上面的方式进行分析，这两个体素群的差异同样会导致条件间相关性的存在——尽管在平均激活上是存在差异的。所以我再重申一下，单变量信息也许与你最后想要画的图没有关系，但是如果你的结论与非单变量分析的结果有着极强的联系，那么这对你来说也许不是一个好消息。
 
-## RSA方法：NHST，效应量，交叉验证，模型选择
+## 3. RSA方法：NHST，效应量，交叉验证，模型选择
 
 本节我们会简单介绍 RSA 方法，并且围绕着它处理一些问题。特别是，我们将会演示如何在个体水平和组水平上检验 RSA 结果的意义。我们同样会了解到 RSA 的效应量方面的一系列的注意事项，同时学到如何进行交叉验证和模型选择。
 
-不同与我们上面所做的那个像玩具一样的例子，本节我们会使用一个真正的 fMRI 研究数据。本数据来源于过去的一项研究。 [Thornton & Mitchell, 2017, Cerebral Cortex](http://markallenthornton.com/cv/Thornton&Mitchell_CC_2017.pdf) 在本研究中，被试需要完成一项社会判断任务，对大约 60 位名人进行评分。在每次试验中，参与者都会判断特定的陈述（例如“他想要学习空手道”）对特定人物（例如 Bill Nye）的适用程度。在整个研究过程中反复重复该过程，直到对 60 个目标在 12 个项目下进行评分。在预处理之后，使用 GLM 对相同目标人物在不同实验条件下的试次进行平均。在得到每个体素上的回归参数后，对参数进行 z 分数化来排除全局背景模式的影响，再在这些参数之间求相关。这是本例开始的地方。
+不同与我们上面所做的那个像玩具一样的例子，本节我们会使用一个真正的 fMRI 研究数据。本数据来源于过去的一项研究。 [Thornton & Mitchell, 2017, Cerebral Cortex](http://markallenthornton.com/cv/Thornton&Mitchell_CC_2017.pdf) 
+
+在本研究中，探讨 60 个社会名人的13项人格特质。研究涉及到的数据包括社会对这些名人的看法，被试对这些被试之间人格差异的比较，以及在想象这些名人时的脑功能活动数据。
+
+社会对这些名人的普遍看法，将使用爬虫对维基百科的名人数据进行爬取，随后使用词袋法检索符合主题描述的词语。在名人之间的值两两求距离后得到本研究中的数据 holistic_dist$text 。
+
+同样的，本研究请 869 人进行在线调查，对这 60 位名人在 13 个人格维度上进行了评分：warmth, competence, agency, experience, trustworthiness, dominance, openness to experience, conscientiousness, extraversion, agreeableness, neuroticism, attractiveness, and intelligence 。通过对这些评分之间求距离，得到了本研究当中的数据 holistic_dist$holistic
+
+在脑成像研究中，参与者要求判断特定的陈述（例如“他想要学习空手道”）对特定人物（例如 Bill Nye）的适用程度。在整个研究过程中反复重复该过程，直到对 60 个目标在 12 个项目下进行评分。这些脑成像数据在预处理之后，使用 GLM 对相同目标人物在不同实验条件（目标任务）下的试次进行平均。在得到每个体素上的回归参数后，对参数进行 z 分数化来排除全局背景模式的影响，再在这些参数之间求相关。这是本例开始的地方。
 
 ![Regions of reliability target person-related activity, within which we analyze patterns](http://markallenthornton.com/images/pmap.png)
+
+我们可以看到上图当中，我们是选择性地选取了一些 ROI 作为后续分析的数据。这些 ROI 的选择的方法基于 Cronbach's alpha 值。计算公式是 α ﹦（n / n -1）(1-∑Si2/St2) 。在本研究中，我们将阈值从 0 到最高值，按 0.01 进行划分，然后计算 Cronbach's alpha 系数，找到最大的值便是我们的阈值。
 
 首先，我们将会读取我们想要预测的神经模式的结果。这个数据由上图所示的体素当中的激活信号，经过 z 分数化后两两计算激活向量，得到相关值。
 
 ```{r}
 # 读取神经数据
-ndat <- read.csv("neural_pattern_similarity.csv")
-dim(ndat)
+neuro_data <- read.csv("neural_pattern_similarity.csv")
+dim(neuro_data)
 
 # 对数据按行取平均值
-nsim <- rowMeans(scale(ndat))
+nsim <- rowMeans(scale(neuro_data))
 length(nsim)
 ```
 
-我们可以看到 ndat 变量的维度是 1770 * 29，其中 1770 是条件间的 beta 值之间的得到的相关，29 是被试个数。
+我们可以看到 neuro_data 变量的维度是 1770 * 29，其中 1770 是条件间的 beta 值之间的得到的相关值，29 是被试个数。
 
 我们接下来则会载入一系列特征数据，是所有被试对名人在人格特质上进行的评分：
 
@@ -156,17 +164,17 @@ rownames(pdims) <- pnames
 levelplot(t(pdims),xlab="",ylab = "",scales = list(x = list(rot = 45)))
 ```
 
-最终，我们将会读取一些整体的相似性测量信息：譬如在不同的目标名人之间的比较评级，以及通过对这些伟人的维基百科页面进行词袋模型分析，来对文本信息相似性的评估。因为这些测量的形式都是反向编码（比如距离），因此我们会反转他们来得到这些信息的相似性。
+最终，我们将会读取一些整体的相似性测量信息：譬如在不同的目标名人之间的人格评分两两之间的距离，以及通过对这些伟人的维基百科页面进行词袋模型分析，来对文本信息相似性的评估。因为这些测量的形式都是反向编码（比如距离），因此我们会反转他们来得到这些信息的相似性。
 
 我们读入的数据中，是对所有对名人之间两两比较得到的结果。故由1770个评分。$\left(\begin{array}{c}{60} \\ {2}\end{array}\right)=\frac{60 !}{2 ! \times 58 !} = 1770$
 
 ```{r}
-holdists <- read.csv("holdists.csv")
-explicit <- 100 - holdists$holistic
-text <- 2 - holdists$text
+holistic_dist <- read.csv("holdists.csv")
+explicit <- 100 - holistic_dist$holistic
+text <- 2 - holistic_dist$text
 ```
 
-### 我们的第一个 RSA ！
+### 3.1 我们的第一个 RSA ！
 
 现在我们已经在 R 当中载入了必要的数据，接下来让我们运行第一个 RSA 分析。这个分析将会对平均神经模式的相似性和对伟人的人格之间的相似性之间做一个相关。
 
@@ -177,14 +185,13 @@ plot(explicit,nsim,xlab = "Rated similarity",ylab = "Neural similarity",pch = 20
 abline(lm(nsim~explicit),col = "red",lwd = 2)
 ```
 
-正如你所看到的，在人们想象那些名人如何看待其他人，与人们在想像这些人时的脑功能活动模式的差异之间，存在着明显的相关性。皮尔逊相关得到的r值为 0.4 。（Kriegeskorte 和 Colleagues 建议使用斯皮尔曼相关来代替皮尔逊相关。他们的建议很有道理。但是我在实际的研究中，很少见到方法上的差异所导致的结果的不同。我们这里来尝试一下。
+正如你所看到的，在人们想象那些名人如何看待其他人，与人们在想像这些人时的脑功能活动模式的差异之间，存在着明显的相关性。皮尔逊相关得到的 r 值为 0.4 。Kriegeskorte 和 Colleagues 建议使用斯皮尔曼相关来代替皮尔逊相关。他们的建议很有道理。但是我在实际的研究中，很少见到方法上的差异所导致的结果的不同。我们这里来尝试一下。
 
 ```{r}
 cor(nsim,explicit,method = "spearman")
-
 ```
 
-所以你能够看到，这就是表征相似性分析的基本概念。无论是脑成像的结果，还是评分的结果，这两者都是对实验中刺激（60位伟人）的表征。而后续进行的分析就是对这两个表征之间进行的比较。
+所以你能够看到，这就是表征相似性分析的基本概念。无论是脑成像的结果，还是评分的结果，这两者都是对实验中刺激（60位伟人）的特征描述。虽然这样的特征之间我们没有办法直接进行比较，但是将他们之间两两计算距离之后，我们得到的信息是“两个伟人之间的差异”。而这种差异在表征上具有一致性，即虽然原始信息不一样，但是他们的二阶数据上是同构的，因此我们基于二阶同构，对新的数据可以比较其相似性。
 
 ### Null hypothesis significance testing
 
@@ -226,7 +233,7 @@ abline(v=cor(nsim,explicit),col="red",lwd=2)
 
 ```{r}
 # 对每一个被试进行相关分析
-ncors <- cor(explicit,ndat)
+ncors <- cor(explicit,neuro_data)
 
 # 对参数进行单个样本t检验 (注意求一个双曲函数)
 t.test(atanh(ncors))
@@ -251,7 +258,7 @@ abline(h=0)
 
 尽管在组水平上分析数据能够让我们来推断总体，但是最佳的 NHST 方法应该能让我们对被试和项目层面都能进行随机效应分析（对所有对自变量的随机截距和随机斜率都进行分析）。然而不幸的是，由于相似性矩阵的随机效应结构的复杂性，最佳的最大随机效应模型非常难以收敛。因此对于大多数的 RSA 分析来说，几乎不可能得到最为正确的 NHST 结果。然而还有一些备选方案，比如 [感染率推断](https://arxiv.org/abs/1512.00810) 。另一种选择是使用贝叶斯统计，因为贝叶斯混合效应模型有时能够收敛最小二乘法无法收敛的模型。这些选择已经超出了本教程所要介绍的范围，但是后面我们会谈一下另一种解决这个问题的方式：交叉验证。
 
-### 效应量
+### 3.2 效应量
 
 效应量在 RSA 中相对比较简单直接。就像我们之前所做的，在项目水平上的分析，效应量就是两个相似性测量变量之间的相关而已。然而，当你做这个分析的时候，考虑你的测量数据的信度仍然是一件有意义的事情。神经测量数据往往混杂有大量的噪声，这常常会导致它与其他测量数据之间计算相似性的时候，得到的结果比真实情况更小。解决这个问题的其中一种办法是衰减校正，即在分析中消除测量误差对相关结果的衰减作用（Jensen，1998）：
 
@@ -259,7 +266,7 @@ abline(h=0)
 # 计算原始相关系数
 cor(nsim,explicit)
 # 计算成像数据中被试间的 Cronbach alpha 系数
-rel <- alpha(ndat)
+rel <- alpha(neuro_data)
 # 呈现标准化alpha系数
 rel$total$std.alpha
 # 校正相关衰减
@@ -276,7 +283,7 @@ cor(nsim,explicit)/sqrt(rel$total$std.alpha)
 
 如果你关心表征相似性中差异性的解释本身，那这些并不是一个重要的问题。但是如果你关心的是在相似性背后那些变量的变异性，那么你可以通过对你做的 RSA 相关取平方根来估计你的效应量。
 
-#### 组水平的效应量
+#### 3.2.1 组水平的效应量
 
 在组水平上，我们可以通过计算 Cohen's d 值来计算效应量。
 
@@ -289,7 +296,7 @@ mean(atanh(ncors))/sd(atanh(ncors))
 
 在基于多元回归或混合效应模型的 RSA 中，还可以估计广泛的其他标准化效应量。但是，这些措施不是仅对应于 RSA 的，所以在这里不予考虑。
 
-### 交叉验证 Cross-validation
+### 3.3 交叉验证 Cross-validation
 
 显著性检验能够提供对总体数据的推断可靠的验证。然而，交叉验证方法能能够提供更稳健的方法来评估你的模型在多大程度上能够对你的数据进行预测。在交叉验证中，我们会使用一部分数据训练一个模型，随后用剩下对数据来进行检验，重复这个过程对数据对子集反复进行训练和检验。让我们来进行一个基于交叉验证对多重回归 RSA，计算总体评价和文本信息，对于神经表征的相似性。
 
@@ -298,19 +305,19 @@ mean(atanh(ncors))/sd(atanh(ncors))
 pairs(data.frame(neural = nsim,explicit,text),pch = 20)
 
 # 对神经测量数据进行标准化，使得所有值均为正值
-ndatp <- ndat - min(ndat)
+neuro_datap <- neuro_data - min(neuro_data)
 
 # 进行留一交叉验证
 
 # 使用整体评分和文本分数定义一个矩阵，后面使用非负最小二乘法求解，这里的1相当于定义截距
 xvars <- cbind(1,explicit,text)
-nsub <- dim(ndat)[2]
+nsub <- dim(neuro_data)[2]
 cvperf <- rep(NA,nsub) # 定义迭代中计算得到的相关性结果变量
 for (i in 1:nsub) {
-  fit <- nnls(xvars,rowMeans(ndatp[,-i])) # 使用非负最小二乘法估计
-  # nnls 函数使用 Lawson-Hanson NNLS 方法，计算 ndat[， -1] 在 xvars 上的投影 fit$fitted
+  fit <- nnls(xvars,rowMeans(neuro_datap[,-i])) # 使用非负最小二乘法估计
+  # nnls 函数使用 Lawson-Hanson NNLS 方法，计算 neuro_data[， -1] 在 xvars 上的投影 fit$fitted
   # fit$fitted相当于除去了噪声的最佳估计值
-  cvperf[i] <- cor(fit$fitted,ndatp[,i])
+  cvperf[i] <- cor(fit$fitted,neuro_datap[,i])
 }
 mean(cvperf)
 ```
@@ -320,7 +327,7 @@ mean(cvperf)
 ```{r fig.height=7, fig.width=7}
 noise <- rep(NA,nsub)
 for (i in 1:nsub){
-  noise[i] <- cor(ndat[,i],rowMeans(ndat[,-i]))
+  noise[i] <- cor(neuro_data[,i],rowMeans(neuro_data[,-i]))
 }
 mean(noise) # noise ceiling
 mean(cvperf)/mean(noise) # 对噪声上限的解释度
@@ -345,21 +352,21 @@ set.seed(1)
 targsel <- sample(c(rep(T,30),rep(F,30)))
 targsel1 <- rsasel(targsel)==1
 targsel2 <- rsasel(!targsel)==1
-ndatp1 <- ndatp[targsel1,]
-ndatp2 <- ndatp[targsel2,]
+neuro_datap1 <- neuro_datap[targsel1,]
+neuro_datap2 <- neuro_datap[targsel2,]
 xvars <- cbind(1,explicit,text)
 xvars1 <- xvars[targsel1,]
 xvars2 <- xvars[targsel2,]
   
   
 # 进行被试留一验证和刺激物分半验证
-nsub <- dim(ndat)[2]
+nsub <- dim(neuro_data)[2]
 cvperf <- matrix(NA,nsub,2)
 for (i in 1:nsub){
-  fit <- nnls(xvars1,rowMeans(ndatp1[,-i]))
-  cvperf[i,1] <- cor(xvars2 %*% fit$x,ndatp2[,i])
-  fit <- nnls(xvars2,rowMeans(ndatp2[,-i]))
-  cvperf[i,2] <- cor(xvars1 %*% fit$x,ndatp1[,i])
+  fit <- nnls(xvars1,rowMeans(neuro_datap1[,-i]))
+  cvperf[i,1] <- cor(xvars2 %*% fit$x,neuro_datap2[,i])
+  fit <- nnls(xvars2,rowMeans(neuro_datap2[,-i]))
+  cvperf[i,2] <- cor(xvars1 %*% fit$x,neuro_datap1[,i])
 }
 mean(cvperf)
 
@@ -367,7 +374,7 @@ mean(cvperf)
 
 当我们尝试将这种方法推广到对刺激物进行分组时，模型的性能表现比起之前的 0.111 降到了 0.108. 然而，这对模型性能的负面影响只有一点点，提示这个模型可能对新的目标人物具有较好的泛化效果。在实践中，我们可能需要以不同分组（或其他的交叉验证方法）反复重复上述过程，从而确保我们得到较好的结果并非侥幸。注意交叉验证方法能够给我们以显著性检验很难提供的答案，正如我们前面所提到的，使用显著性检验很难在分析混合效应模型的时候得到收敛结果。
 
-### 模型选择
+### 3.4 模型选择
 
 到目前为止，我们已经分析了预测变量为一个到两个的模型。在很多的研究当中，研究者会尝试在很多维度上解释神经相似性。当建模变得越来越复杂时，我们何时可以说我们已经构建解释脑功能活动最佳的 RSA 模型？模型选择虽然不是仅限于 RSA 方法中的问题，但却是非常重要的。为一个回归模型选择最佳的特征集合有很多种好方法。传统的方法包括逐步回归和最优回归子集法。然而，这里我们给出一个从较小的特征集合当中进行简单穷举搜索的例子。
 
@@ -396,8 +403,8 @@ perf <- matrix(NA,nc,nsub)
 for (i in 1:nc){
   xvars <- cbind(1,big5d[,b5combs[[i]]])
   for (j in 1:nsub){
-    fit <- nnls(xvars,rowMeans(ndatp[,-j])) # fit using non-negative least squares
-    perf[i,j] <- cor(fit$fitted,ndatp[,j])
+    fit <- nnls(xvars,rowMeans(neuro_datap[,-j])) # fit using non-negative least squares
+    perf[i,j] <- cor(fit$fitted,neuro_datap[,j])
   }
 }
 # 标记表现最佳的模型
@@ -408,11 +415,11 @@ colnames(big5)[b5combs[[which(mperf==max(mperf))[1]]]]
 
 我们看到最佳的模型是将大五人格当中的四个因素组合起来：责任心，外向性，神经质，开放性。在实践当中，如果我们想要继续估计这个模型的表现（比如计算一下噪声上限），我们最好分离模型选择和估计模型效力的步骤。在这个研究中，我们只检测了31中可能的模型（大五人格的排列组合），但是可以选择模型的空间会随着备选的预测变量的增加而迅速地增长。这意味着只要稍微多一点点维度，我们就会在模型选择上遇到极大的过拟合风险。使用独立数据进行模型选择和评估可减少这种风险。
 
-## 数据探索和可视化
+## 4. 数据探索和可视化
 
 到目前为止，我们主要从验证的角度考察了表征相似性方法：尝试使用模型拟合测量的神经数据。但是，探索性分析（包括可视化）有着至关重要的补充作用。在本节中，我们将探究几种重要的探索性方法和可视化技术。
 
-### 多维缩放法
+### 4.1 多维缩放法
 
 多维缩放法是一种非常强大的对数据相似性进行探索和可视化的技术，属于流形学习的一种。
 
@@ -473,7 +480,7 @@ plot(mdfit2,plot.type = "Shepard","Ordinal fit")
 不幸的是，转换为定序的 MDS 并没有多大的帮助——我们的数据维度太高了，很难在2维上得到表征。稍后我们会介绍一下其他的流型学习方法来让结果变得更好。然而在这之前我们首先来看一下双标图：biplots. 正如我之前所提到的，MDS 的轴是任意方向的。双标图在 MDS 图上增加了一些箭头，这些箭头标示了每个维度在图中坐标轴方向上的相关性。这些箭头能够帮助我们理解 MDS 图背后的含义。
 ![A heavily embellished MDS, including biplots](http://markallenthornton.com/images/person-space.png)
 
-#### t-SNE 
+#### 4.2 t-SNE 
 
 t-SNE 方法，或者说 t 分布随机近邻嵌入，是一种非常流行的流型学习和降维方法。不同于 MDS 尝试维持数据的全局结构，t-SNE 则是去保持数据的局部结构。因此在 MDS 当中，cluster 之间的长距离是存在意义的，但是很难保证最终得到的反映构型的近邻结果。相比之下，t-SNE 方法则在解释长距离时缺乏意义，但是近邻结构则会反映反映更多的数据含义。
 
@@ -488,7 +495,7 @@ text(tres$Y[,1],tres$Y[,2]+2,pnames,cex=.75)
 
 你能看到这里 t-SNE 的结果有点像聚类分析中的分类。事实上，在 t-SNE 当中存在“困惑度（perplexity）”这一参数，这个参数会影响最终做出聚类结果。在 [这里](https://distill.pub/2016/misread-tsne/)这里提供一个教程，更为清晰地解释了 t-SNE 的参数设置和解释。
 
-#### Hierarchical clustering
+#### 4.3 Hierarchical clustering
 
 聚类分析是另一种探索相似性数据的技术，聚类本身是一个较为复杂的话题，因此我们在这里不会涉及太多的细节。但是让我们在这里简单看一下这种方法：多层聚类分析。它有着两种形式，包括将点聚集形成越来越大点簇（自下而上）和将簇分割成越来越小的点（自上而下）。两种形式都是直接对距离进行分析，而非对原始数据进行分析。同时，两种方法都会形成一个树状图（dendrograms）。点凝聚法相对来说更快，并且更常见，所以我们更多的是关注于这种方法。多层聚类分析由于其强大的呈现方式——树状图而对探索性数据分析有着巨大价值。
 
@@ -498,7 +505,7 @@ hc <- hclust(as.dist(psqnsim),method = "ward.D2")
 plot(as.dendrogram(hc),horiz=T,xlim=c(4,-1))
 ```
 
-## Conclusion
+## 结论
 
 现在我们已经学习了如何对 fMRI 数据进行表征相似性分析。首先，我们学习了几种计算数据之间相似度的方法。接下来，我们了解了一些 RSA 相关的知识，包括NHST的方法，效应量，交叉验证和模型选择。最后，我们了解了几种探索和可视化数据相似性的技术，包括多维缩放，t-SNE 和多层聚类。这些方法结合在一起可以为你提供一个绝佳的角度开始分析数据相似性！
 
