@@ -14,6 +14,8 @@ Ver. 0.001 beta
 
 本教程翻译自 Mark A. Thornton 博士在宾大夏令营的 RSA tutorial 。为了便于理解，**本文中夹带了大量补充信息，包括技术细节的解释和实验设计的描述，同时未于原文作明确区分**，在此注明。
 
+为了节省时间，没有直译，而存在大量的意译，且未推敲词句，仅保证尽可能高的准确性，并期望容易理解。
+
 欢迎提交 issue 指出本文仍然没有解释清楚的地方，我会对本文持续迭代。
 
 ## RSA 方法介绍
@@ -322,15 +324,12 @@ mean(noise) # noise ceiling
 mean(cvperf)/mean(noise) # 对噪声上限的解释度
 ```
 
-The noise ceiling for this data is only r = 0.129. This means that, given the amount of heterogeneity between participants, even a hypothetical perfect model couldn't do better than r = 0.129. If we divide our actual performance by the noise ceiling, we can see that together, explicit ratings and textual similarity achieve 86% of the performance of a perfect theory. Although the calculations are somewhat different due to the cross-validation, you might realize that what we've just done is conceptually the same as the correlation disattenuation we performed earlier. Thus, although noise ceilings can be helpful, they should be interpreted with a grain of salt because they are only estimates and they carry their own assumptions with them. For instance, in the example above, we're implicitly assuming that all meaningful variance is at the group level (i.e., there are no meaningful idiosyncrasies), which is almost certainly not true. 
-
 本数据的噪声上限只有 0.129，这意味着在给定的被试间差异性当中，理论上最佳模型的解释度不会超过 0.129. 如果将我们做交叉验证得到的结果和噪声上限相除，我们能够看到，这两个变量能够达到最佳模型 86% 的解释度。虽然在计算方法上有些不同，但你可能会意识到我们刚刚所做的交叉验证在概念上与我们之前执行的相关性衰减相同。因此，尽管噪声上限对理解我们对结果可能有所帮助，但是我们仍然需要对它抱有怀疑，因为它们只是估计值，并且有着前提假设假设。例如，在上面的例子中，我们存在一个潜在假设，所有有意义的变异都在组水平上（我们把被试的神经测量信号平均了），这几乎是不可能的。
 
-More generally, using different cross-validation schemes can be very useful for estimating generalization across different "boundaries" in your data. In the example above, we only cross-validated with respect to participants, but in the case below, we also cross-validate with respect to mental states.
+从更一般的角度来讲，使用不同的交叉验证方法对估计数据当中不同的“边界”的泛化非常有用。在如上的例子当中，我们只能对被试进行交叉验证，但是在下面的例子中，我们同样可以对心理状态进行交叉验证。
 
 ```{r}
-
-# define function to translate vector selector to matrix selector and vectorize
+# 定义函数用于转换备选向量为矩阵，并重新转换为向量（需要结合下方代码理解）
 rsasel <- function(selvec){
   nobj <- length(selvec)
   selmat <- matrix(F,nobj,nobj)
@@ -339,8 +338,7 @@ rsasel <- function(selvec){
   return(squareform(selmat))
 }
 
-
-# split data by target people
+# 依据刺激物分割数据到训练集与测试集
 set.seed(1)
 targsel <- sample(c(rep(T,30),rep(F,30)))
 targsel1 <- rsasel(targsel)==1
@@ -352,7 +350,7 @@ xvars1 <- xvars[targsel1,]
 xvars2 <- xvars[targsel2,]
   
   
-# conduct leave-one-participant-out and split-half-by-target cross-validation 
+# 进行被试留一验证和刺激物分半验证
 nsub <- dim(ndat)[2]
 cvperf <- matrix(NA,nsub,2)
 for (i in 1:nsub){
@@ -365,22 +363,21 @@ mean(cvperf)
 
 ```
 
-The performance of the model dropped to r = .108 (vs r = .111) when we ask it to generalize to a new set of target people. However, this is a very slightly reduction in performance, suggesting that this model could potentially generalize quite well to new target people. In practice, we should probably repeat the process above multiple times with different split halves (or another cross-validation scheme) to ensure that the results we see aren't a fluke. Note that cross-validation can thus give us an answer which is difficult to obtain through significance testing (since, as discussed previously, it can be difficult to get a maximal mixed effects model to converge for such data).
+当我们尝试将这种方法推广到对刺激物进行分组时，模型的性能表现比起之前的 0.111 降到了 0.108. 然而，这对模型性能的负面影响只有一点点，提示这个模型可能对新的目标人物具有较好的泛化效果。在实践中，我们可能需要以不同分组（或其他的交叉验证方法）反复重复上述过程，从而确保我们得到较好的结果并非侥幸。注意交叉验证方法能够给我们以显著性检验很难提供的答案，正如我们前面所提到的，使用显著性检验很难在分析混合效应模型的时候得到收敛结果。
 
-### Model selection
+### 模型选择
 
-In the examples so far, we've worked with models that have only one or two predictors. In many studies, researchers try to explain neural similarity using many more dimensions. As models get more complex, how can we tell when we have the best RSA model to explain brain activity? Model selection is not a unique problem for RSA, but it is an important one. There are many good ways to pick the best set of dimensions for a regression model. Traditional methods include stepwise and best subset regression. However, here we'll give an example of a simple exhaustive search through a relatively small set of dimensions.
+到目前为止，我们已经分析了预测变量为一个到两个的模型。在很多的研究当中，研究者会尝试在很多维度上解释神经相似性。当建模变得越来越复杂时，我们何时可以说我们已经构建解释脑功能活动最佳的 RSA 模型？模型选择虽然不是仅限于 RSA 方法中的问题，但却是非常重要的。为一个回归模型选择最佳的特征集合有很多种好方法。传统的方法包括逐步回归和最优回归子集法。然而，这里我们给出一个从较小的特征集合当中进行简单穷举搜索的例子。
 
-Among the various predictors we asked participants to rate famous people on are the cardinal dimensions of the Big 5: openness, conscientiousness, extraversion, agreeableness, and neuroticism. What combination of these five predictors is best for explaining
-the neural pattern similarity between representations of famous people?
+我们请被试对这些名人进行评分时所得到对诸多预测变量之上，有着大五人格这个基本维度，即开放性（openness），责任心（conscientiousness，外倾性（extroversion），宜人性（agreeableness），神经质性（neuroticism）等。如何对这些预测变量进行组合，最能够解释我们对这些名人的神经表征的模式相似性呢？
 
 ```{r}
-# select appropriate dimensions from rating matrix
+# 选择评价矩阵当中最合适的维度
 big5 <- pdims[,c(2,5,8,10,11)]
-big5d <- -apply(big5,2,dist) # convert to distances and sign flip
-big5d <- big5d - min(big5d) # ensure positivity
+big5d <- -apply(big5,2,dist) # 转换为距离
+big5d <- big5d - min(big5d) # 确保数值都为正
 
-# enumerate all possible combinations
+# 列举所有可能的组合
 b5combs <- list()
 ind <- 1
 for (i in 1:5){
@@ -391,7 +388,7 @@ for (i in 1:5){
   }
 }
 
-# cycle through combinations, with LOO-CV
+# 对所有的组合拟合模型进行计算
 nc <- length(b5combs)
 perf <- matrix(NA,nc,nsub)
 for (i in 1:nc){
@@ -401,35 +398,42 @@ for (i in 1:nc){
     perf[i,j] <- cor(fit$fitted,ndatp[,j])
   }
 }
-# calculate model with best performance
+# 标记表现最佳的模型
 mperf <- rowMeans(perf)
 colnames(big5)[b5combs[[which(mperf==max(mperf))[1]]]]
 
 ```
 
-The best model consists of just 3 of the Big 5: openness, conscientousness, and extraversion. In practice, if we wanted to then assess the performance of this model (e.g., relativel to the noise ceiling), we would be well-advised to separate the model selection and evaluation steps. In this case, we were only examining 31 possible models (combinations of 5 variables) but the space of possible models grows very rapidly as the number of possible predictors increases. This means that with just a few more dimensions, we would be at serious risk of overfitting by model selection (rather than the typical case of model selection via parameter estimation). Using independent data for model selection and evaluation mitigates this risk.
+我们看到最佳的模型是将大五人格当中的四个因素组合起来：责任心，外向性，神经质，开放性。在实践当中，如果我们想要继续估计这个模型的表现（比如计算一下噪声上限），我们最好分离模型选择和估计模型效力的步骤。在这个研究中，我们只检测了31中可能的模型（大五人格的排列组合），但是可以选择模型的空间会随着备选的预测变量的增加而迅速地增长。这意味着只要稍微多一点点维度，我们就会在模型选择上遇到极大的过拟合风险。使用独立数据进行模型选择和评估可减少这种风险。
 
-## Exploration and visualization
+## 数据探索和可视化
 
-So far we have mainly examined representational similarity from a confirmatory perspsective: trying to fit particular models to the observed neural data. However, exploratory analysis - including data visualization - is essential to complement these confirmatory approaches. In this section we will explore several important exploratory and visualization techniques.
+到目前为止，我们主要从验证的角度考察了表征相似性方法：尝试使用模型拟合测量的神经数据。但是，探索性分析（包括可视化）有着至关重要的补充作用。在本节中，我们将探究几种重要的探索性方法和可视化技术。
 
-### Multidimensional scaling
+### 多维缩放法
 
-Multidimensional scaling (MDS) is one of the most powerful techniques for visualizing and exploring similarity data. The basic idea is to take a distance matrix and use it to reconstruct a configuration of points that embody those distances as accurately as possible within an N-dimensional space. In practice, N usually is 2 (sometimes 3) since this makes the results easy to visualize. There are many implementations in R, but we'll be using the smacof package.
+多维缩放法是一种非常强大的对数据相似性进行探索和可视化的技术，属于流形学习的一种。
 
-#### Trival example: airline distances between French cities
+流型学习可以理解为是一种降维方法。流形学习的视角下，我们在高维空间当中表征的数据都是低维空间当中的映射。因此我们可以在保持低维空间形状的前提下对高维数据进行描述。比如二维图形中的圆，我们可以使用单一特征值半径来进行描述，则即保留了圆的特征，又能对数据进行降维。这种方法的基本思想就是将距离矩阵中的点的构型进行重构，使得这些点的距离尽可能准确地表征在N维空间当中。在实践当中，这里的N通常为 2 （或者3），因为这样可以使得结果容易可视化。在 R 当中有大量的包可以使用，我们在这里使用的是 smacof 包。
+
+#### 一个简单示例：法国城市的航线距离
 
 ```{r fig.height=8, fig.width=8}
 layout(mat=matrix(1))
 mdfit <- smacofSym(Guerry,2)
-plot(mdfit) # a reconstructed map of France!
+plot(mdfit) 
 ```
-Note that the orientation of an MDS plot is arbitrary: this is one of the major limitations of the method. However, different configurations can be rotated into the same orientation via Procrutes algorithm.
 
-#### MDS on neural pattern similarity
-Now that we've seen how MDS works, let's apply it to our fMRI data.
+我们可以看到出现的图像近似于法国地图。
+
+注意这里 MDS 图中的方向是任意的：这是这个方法的一个主要的限制。然而，不同的点的构型能够通过 Procrutes 算法的旋转从而得到相同的方向。
+
+#### MDS 在神经表征相似性上的应用
+
+现在我们来看一下如何在神经数据当中使用 MDS 方法。
+
 ```{r fig.height=8, fig.width=8}
-# name similarity matrix for plotting
+# 对相似性矩阵进行命名
 rownames(sqnsim) <- pnames
 colnames(sqnsim) <- pnames
 
@@ -443,7 +447,7 @@ plot(mdfit1)
 
 ```
 
-The closer to people are in the figure above, the more similar the neural pattern they elicit. How can we tell if this configuration is a good fit for the data? The key statistic for assessing MDS fit is called "stress". It's a measure of how far each point is in the configuration relative to where it "should" be, given the input distance matrix. A typical rule of thumb is "stress > .15 = bad" but this is not really a good approach because stress depends heavily on the number of 'objects' in the distance matrix. Stress per point (SPP) is more helpful, as it can illustrate which particular points are ill-fit.
+上图当中人物的距离越近，则意味着他们诱发被试的神经活动模式越相似。我们在什么情况下可以说这个构型对数据有着较好的拟合度呢？在 MDS 当中一个关键的估计统计值是“压力值”。它反映了构型当中的每一个点离它“应该在”的位置有多远。一个简单的标准是当压力值大于 0.15 时，结果较差。但是这并不是一个较好的方法，因为压力值极大地受距离矩阵中对象个数的影响。每节点压力值是一个更好的指标，因为它能够反映特定的点是否有较差的拟合。
 
 ```{r fig.height=8, fig.width=8}
 mdfit1$stress
@@ -451,7 +455,7 @@ plot(mdfit1,plot.type="stressplot")
 
 ```
 
-The overall stress of this configuration is pretty bad. Nancy Grace, Michael Jordan, Jimmy Fallon, and Bob Marley are particularly 'misplaced' in the configuration plot, relative to their actual neural similarity to other targets. Let's try to get a better fit! One way to do this is to relax the assumption that your similarity measure is a metric variable, and instead treat it as ordinal. 
+从上面的结果中，我们可以看到构型的整体压力并不是很好。 Nancy Grace，Michael Jordan，Jimmy Fallon 以及 Bob Marley 与其他个体的神经相似性相比，都在构型图中“放错了位置”。让我们尝试得到更好的拟合结果。我们在这里选择的方法是放宽我们的实验假设，将衡量相似性的度量变量看作是定序变量。
 
 ```{r fig.height=4, fig.width=8}
 
@@ -465,12 +469,12 @@ plot(mdfit1,plot.type="Shepard","Ratio fit")
 plot(mdfit2,plot.type="Shepard","Ordinal fit")
 ```
 
-Unfortunately, switching to an ordinal MDS hasn't helped much - our data are just too high dimensional to reproduce their similarities on a 2-dimensional manifold! In a moment, we'll take a look at a different manifold-learning technique that might fair a bit better. However, let's first examine one nice addition to MDS: biplots. As I mentioned earlier, the axes of an MDS are arbitrary. Biplots are arrows added to an MDS which indicate the correlation of each dimension with the axes of the plot. They help to interpret the meaning behind the MDS plot.
-
+不幸的是，转换为定序的 MDS 并没有多大的帮助——我们的数据维度太高了，很难在2维上得到表征。稍后我们会介绍一下其他的流型学习方法来让结果变得更好。然而在这之前我们首先来看一下双标图：biplots. 正如我之前所提到的，MDS 的轴是任意方向的。双标图在 MDS 图上增加了一些箭头，这些箭头标示了每个维度在图中坐标轴方向上的相关性。这些箭头能够帮助我们理解 MDS 图背后的含义。
 ![A heavily embellished MDS, including biplots](http://markallenthornton.com/images/person-space.png)
 
 #### t-SNE 
-t-SNE, or t-distributed stochastic neighbor embedding, is another popular manifold learning/dimensionality reduction algorithm. Where MDS tries to preserve the global structure of the data, t-SNE ties to preserve the local structure. Thus long-range distances in an MDS configuration are quite meaningful, but you're not guaranteed to end up with true nearest-neighbors being represented as such in the configuration. In contrast, in t-SNE the long range distances don't mean much, but nearest neighbor structure will be preserved as much as possible.
+
+t-SEN 方法，或者说 t 分布随机近邻嵌入，是一种非常流行的流型学习和降维方法。不同于 MDS 尝试维持数据的全局结构，t-SNE 则是去保持数据的局部结构。因此在 MDS 当中，cluster 之间的长距离是存在意义的，但是很难保证最终得到的反映构型的近邻结果。相比之下，t-SNE 方法则在解释长距离时缺乏意义，但是近邻结构则会反映反映更多的数据含义。
 
 ```{r fig.height=8, fig.width=8}
 
@@ -481,10 +485,11 @@ plot(tres$Y,pch=20,xlab="",ylab="")
 text(tres$Y[,1],tres$Y[,2]+2,pnames,cex=.75)
 ```
 
-You can see here that the results of t-SNE tend to look a bit more cluster-like. How much this is true depends on the "perplexity" parameter of the algorithm. This parameter can be difficult to set because different settings reveal different structure in the data. There is an excellent introduction to setting perplexity and interpreting t-SNE can be found [here](https://distill.pub/2016/misread-tsne/).
+你能看到这里 t-SNE 的结果有点像聚类分析中的分类。事实上，在 t-SNE 当中存在“困惑度（perplexity）”这一参数，这个参数会影响最终做出聚类结果。在 [这里](https://distill.pub/2016/misread-tsne/)这里提供一个教程，更为清晰地解释了 t-SNE 的参数设置和解释。
 
 #### Hierarchical clustering
-Clustering is another powerful technique for exploring similarity data. Clustering is a complex topic of its own, so we won't go into too much detail here, but let's take a quick look at one method: hierarchical clustering. It can take two main forms: agglomerative (bottom-up) merging of points into larger and larger cluster, and divisive (top-down) breaking of clusters eventually yielding individual points. Both forms operate directly on distance matrices rather than data matrices, and both yield the familiar tree-like structure of dendrograms. Agglomerative clustering tends to be faster and more common, so we'll focus on it. Hierarchical clustering is particularly valuable for data exploration because it pairs well with a powerful visualization technique - the dendrogram. 
+
+聚类分析是另一种探索相似性数据的技术，聚类本身是一个较为复杂的话题，因此我们在这里不会涉及太多的细节。但是让我们在这里简单看一下这种方法：多层聚类分析。它有着两种形式，包括将点聚集形成越来越大点簇（自下而上）和将簇分割成越来越小的点（自上而下）。两种形式都是直接对距离进行分析，而非对原始数据进行分析。同时，两种方法都会形成一个树状图（dendrograms）。点凝聚法相对来说更快，并且更常见，所以我们更多的是关注于这种方法。多层聚类分析由于其强大的呈现方式——树状图而对探索性数据分析有着巨大价值。
 
 ```{r fig.height=10, fig.width=8}
 
@@ -494,6 +499,5 @@ plot(as.dendrogram(hc),horiz=T,xlim=c(4,-1))
 
 ## Conclusion
 
-Today we've learned how to conduct representational similarity analyses of fMRI data. First, we learned several methods for calculating the similarity between data objects. Next, we learned about RSA proper, including methods for NHST, effect sizes, cross-validation, and model selection. Finally, we learned about several techniques for exploring and visualizing similarity data, including multidimensional scaling, t-SNE, and hierarchical clustering. Together these methods should give you an excellent position from which to start analyzing neural similarity data!
-
+现在我们已经学习了如何对 fMRI 数据进行表征相似性分析。首先，我们学习了几种计算数据之间相似度的方法。接下来，我们了解了一些 RSA 相关的知识，包括NHST的方法，效应量，交叉验证和模型选择。最后，我们了解了几种探索和可视化数据相似性的技术，包括多维缩放，t-SNE 和多层聚类。这些方法结合在一起可以为你提供一个绝佳的角度开始分析数据相似性！
 

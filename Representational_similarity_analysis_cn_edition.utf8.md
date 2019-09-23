@@ -21,6 +21,8 @@ Ver. 0.001 beta
 
 本教程翻译自 Mark A. Thornton 博士在宾大夏令营的 RSA tutorial 。为了便于理解，**本文中夹带了大量补充信息，包括技术细节的解释和实验设计的描述，同时未于原文作明确区分**，在此注明。
 
+为了节省时间，没有直译，而存在大量的意译，且未推敲词句，仅保证尽可能高的准确性，并期望容易理解。
+
 欢迎提交 issue 指出本文仍然没有解释清楚的地方，我会对本文持续迭代。
 
 ## RSA 方法介绍
@@ -743,11 +745,9 @@ mean(cvperf)/mean(noise) # performance as fraction of noise ceiling
 <!-- rnb-text-begin -->
 
 
-The noise ceiling for this data is only r = 0.129. This means that, given the amount of heterogeneity between participants, even a hypothetical perfect model couldn't do better than r = 0.129. If we divide our actual performance by the noise ceiling, we can see that together, explicit ratings and textual similarity achieve 86% of the performance of a perfect theory. Although the calculations are somewhat different due to the cross-validation, you might realize that what we've just done is conceptually the same as the correlation disattenuation we performed earlier. Thus, although noise ceilings can be helpful, they should be interpreted with a grain of salt because they are only estimates and they carry their own assumptions with them. For instance, in the example above, we're implicitly assuming that all meaningful variance is at the group level (i.e., there are no meaningful idiosyncrasies), which is almost certainly not true. 
-
 本数据的噪声上限只有 0.129，这意味着在给定的被试间差异性当中，理论上最佳模型的解释度不会超过 0.129. 如果将我们做交叉验证得到的结果和噪声上限相除，我们能够看到，这两个变量能够达到最佳模型 86% 的解释度。虽然在计算方法上有些不同，但你可能会意识到我们刚刚所做的交叉验证在概念上与我们之前执行的相关性衰减相同。因此，尽管噪声上限对理解我们对结果可能有所帮助，但是我们仍然需要对它抱有怀疑，因为它们只是估计值，并且有着前提假设假设。例如，在上面的例子中，我们存在一个潜在假设，所有有意义的变异都在组水平上（我们把被试的神经测量信号平均了），这几乎是不可能的。
 
-More generally, using different cross-validation schemes can be very useful for estimating generalization across different "boundaries" in your data. In the example above, we only cross-validated with respect to participants, but in the case below, we also cross-validate with respect to mental states.
+从更一般的角度来讲，使用不同的交叉验证方法对估计数据当中不同的“边界”的泛化非常有用。在如上的例子当中，我们只能对被试进行交叉验证，但是在下面的例子中，我们同样可以对心理状态进行交叉验证。
 
 
 <!-- rnb-text-end -->
@@ -756,11 +756,10 @@ More generally, using different cross-validation schemes can be very useful for 
 <!-- rnb-chunk-begin -->
 
 
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuXG4jIGRlZmluZSBmdW5jdGlvbiB0byB0cmFuc2xhdGUgdmVjdG9yIHNlbGVjdG9yIHRvIG1hdHJpeCBzZWxlY3RvciBhbmQgdmVjdG9yaXplXG5yc2FzZWwgPC0gZnVuY3Rpb24oc2VsdmVjKXtcbiAgbm9iaiA8LSBsZW5ndGgoc2VsdmVjKVxuICBzZWxtYXQgPC0gbWF0cml4KEYsbm9iaixub2JqKVxuICBzZWxtYXRbc2VsdmVjLHNlbHZlY10gPC0gVFxuICBkaWFnKHNlbG1hdCk8LTBcbiAgcmV0dXJuKHNxdWFyZWZvcm0oc2VsbWF0KSlcbn1cblxuXG4jIHNwbGl0IGRhdGEgYnkgdGFyZ2V0IHBlb3BsZVxuc2V0LnNlZWQoMSlcbnRhcmdzZWwgPC0gc2FtcGxlKGMocmVwKFQsMzApLHJlcChGLDMwKSkpXG50YXJnc2VsMSA8LSByc2FzZWwodGFyZ3NlbCk9PTFcbnRhcmdzZWwyIDwtIHJzYXNlbCghdGFyZ3NlbCk9PTFcbm5kYXRwMSA8LSBuZGF0cFt0YXJnc2VsMSxdXG5uZGF0cDIgPC0gbmRhdHBbdGFyZ3NlbDIsXVxueHZhcnMgPC0gY2JpbmQoMSxleHBsaWNpdCx0ZXh0KVxueHZhcnMxIDwtIHh2YXJzW3RhcmdzZWwxLF1cbnh2YXJzMiA8LSB4dmFyc1t0YXJnc2VsMixdXG4gIFxuICBcbiMgY29uZHVjdCBsZWF2ZS1vbmUtcGFydGljaXBhbnQtb3V0IGFuZCBzcGxpdC1oYWxmLWJ5LXRhcmdldCBjcm9zcy12YWxpZGF0aW9uIFxubnN1YiA8LSBkaW0obmRhdClbMl1cbmN2cGVyZiA8LSBtYXRyaXgoTkEsbnN1YiwyKVxuZm9yIChpIGluIDE6bnN1Yil7XG4gIGZpdCA8LSBubmxzKHh2YXJzMSxyb3dNZWFucyhuZGF0cDFbLC1pXSkpXG4gIGN2cGVyZltpLDFdIDwtIGNvcih4dmFyczIgJSolIGZpdCR4LG5kYXRwMlssaV0pXG4gIGZpdCA8LSBubmxzKHh2YXJzMixyb3dNZWFucyhuZGF0cDJbLC1pXSkpXG4gIGN2cGVyZltpLDJdIDwtIGNvcih4dmFyczEgJSolIGZpdCR4LG5kYXRwMVssaV0pXG59XG5tZWFuKGN2cGVyZilcbmBgYCJ9 -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyDlrprkuYnlh73mlbDnlKjkuo7ovazmjaLlkJHph4/pgInmi6nlmajliLDnn6npmLXpgInmi6nlmajvvIzlubbov5vooYzlkJHph4/ljJZcbnJzYXNlbCA8LSBmdW5jdGlvbihzZWx2ZWMpe1xuICBub2JqIDwtIGxlbmd0aChzZWx2ZWMpXG4gIHNlbG1hdCA8LSBtYXRyaXgoRixub2JqLG5vYmopXG4gIHNlbG1hdFtzZWx2ZWMsc2VsdmVjXSA8LSBUXG4gIGRpYWcoc2VsbWF0KTwtMFxuICByZXR1cm4oc3F1YXJlZm9ybShzZWxtYXQpKVxufVxuXG4jIOS+neaNruWIuua/gOeJqeWIhuWJsuaVsOaNruWIsOiuree7g+mbhuS4jua1i+ivlembhlxuc2V0LnNlZWQoMSlcbnRhcmdzZWwgPC0gc2FtcGxlKGMocmVwKFQsMzApLHJlcChGLDMwKSkpXG50YXJnc2VsMSA8LSByc2FzZWwodGFyZ3NlbCk9PTFcbnRhcmdzZWwyIDwtIHJzYXNlbCghdGFyZ3NlbCk9PTFcbm5kYXRwMSA8LSBuZGF0cFt0YXJnc2VsMSxdXG5uZGF0cDIgPC0gbmRhdHBbdGFyZ3NlbDIsXVxueHZhcnMgPC0gY2JpbmQoMSxleHBsaWNpdCx0ZXh0KVxueHZhcnMxIDwtIHh2YXJzW3RhcmdzZWwxLF1cbnh2YXJzMiA8LSB4dmFyc1t0YXJnc2VsMixdXG4gIFxuICBcbiMg6L+b6KGM6KKr6K+V55WZ5LiA6aqM6K+B5ZKM5Yi65r+A54mp5YiG5Y2K6aqM6K+BXG5uc3ViIDwtIGRpbShuZGF0KVsyXVxuY3ZwZXJmIDwtIG1hdHJpeChOQSxuc3ViLDIpXG5mb3IgKGkgaW4gMTpuc3ViKXtcbiAgZml0IDwtIG5ubHMoeHZhcnMxLHJvd01lYW5zKG5kYXRwMVssLWldKSlcbiAgY3ZwZXJmW2ksMV0gPC0gY29yKHh2YXJzMiAlKiUgZml0JHgsbmRhdHAyWyxpXSlcbiAgZml0IDwtIG5ubHMoeHZhcnMyLHJvd01lYW5zKG5kYXRwMlssLWldKSlcbiAgY3ZwZXJmW2ksMl0gPC0gY29yKHh2YXJzMSAlKiUgZml0JHgsbmRhdHAxWyxpXSlcbn1cbm1lYW4oY3ZwZXJmKVxuYGBgIn0= -->
 
 ```r
-
-# define function to translate vector selector to matrix selector and vectorize
+# 定义函数用于转换向量选择器到矩阵选择器，并进行向量化
 rsasel <- function(selvec){
   nobj <- length(selvec)
   selmat <- matrix(F,nobj,nobj)
@@ -769,8 +768,7 @@ rsasel <- function(selvec){
   return(squareform(selmat))
 }
 
-
-# split data by target people
+# 依据刺激物分割数据到训练集与测试集
 set.seed(1)
 targsel <- sample(c(rep(T,30),rep(F,30)))
 targsel1 <- rsasel(targsel)==1
@@ -782,7 +780,7 @@ xvars1 <- xvars[targsel1,]
 xvars2 <- xvars[targsel2,]
   
   
-# conduct leave-one-participant-out and split-half-by-target cross-validation 
+# 进行被试留一验证和刺激物分半验证
 nsub <- dim(ndat)[2]
 cvperf <- matrix(NA,nsub,2)
 for (i in 1:nsub){
@@ -812,14 +810,14 @@ mean(cvperf)
 <!-- rnb-text-begin -->
 
 
-The performance of the model dropped to r = .108 (vs r = .111) when we ask it to generalize to a new set of target people. However, this is a very slightly reduction in performance, suggesting that this model could potentially generalize quite well to new target people. In practice, we should probably repeat the process above multiple times with different split halves (or another cross-validation scheme) to ensure that the results we see aren't a fluke. Note that cross-validation can thus give us an answer which is difficult to obtain through significance testing (since, as discussed previously, it can be difficult to get a maximal mixed effects model to converge for such data).
+当我们尝试将这种方法推广到对刺激物进行分组时，模型的性能表现比起之前的 0.111 降到了 0.108. 然而，这对模型性能的负面影响只有一点点，提示这个模型可能对新的目标人物具有较好的泛化效果。在实践中，我们可能需要以不同分组（或其他的交叉验证方法）反复重复上述过程，从而确保我们得到较好的结果并非侥幸。注意交叉验证方法能够给我们以显著性检验很难提供的答案，正如我们前面所提到的，使用显著性检验很难在分析混合效应模型的时候得到收敛结果。
 
-### Model selection
+### 模型选择
 
-In the examples so far, we've worked with models that have only one or two predictors. In many studies, researchers try to explain neural similarity using many more dimensions. As models get more complex, how can we tell when we have the best RSA model to explain brain activity? Model selection is not a unique problem for RSA, but it is an important one. There are many good ways to pick the best set of dimensions for a regression model. Traditional methods include stepwise and best subset regression. However, here we'll give an example of a simple exhaustive search through a relatively small set of dimensions.
+到目前为止，我们已经分析了预测变量为一个到两个的模型。在很多的研究当中，研究者会尝试在很多维度上解释神经相似性。当建模变得越来越复杂时，我们何时可以说我们已经构建解释脑功能活动最佳的 RSA 模型？模型选择虽然不是仅限于 RSA 方法中的问题，但却是非常重要的。为一个回归模型选择最佳的特征集合有很多种好方法。传统的方法包括逐步回归和最优回归子集法。然而，这里我们给出一个从较小的特征集合当中进行简单穷举搜索的例子。
 
-Among the various predictors we asked participants to rate famous people on are the cardinal dimensions of the Big 5: openness, conscientiousness, extraversion, agreeableness, and neuroticism. What combination of these five predictors is best for explaining
-the neural pattern similarity between representations of famous people?
+我们请被试对这些名人进行评分时所得到对诸多预测变量之上，有着大五人格这个基本维度，即开放性（openness），责任心（conscientiousness，外倾性（extroversion），宜人性（agreeableness），
+神经质性（neuroticism）等。如何对这些预测变量进行组合，最能够解释我们对这些名人的神经表征的模式相似性呢？
 
 
 <!-- rnb-text-end -->
@@ -828,15 +826,15 @@ the neural pattern similarity between representations of famous people?
 <!-- rnb-chunk-begin -->
 
 
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBzZWxlY3QgYXBwcm9wcmlhdGUgZGltZW5zaW9ucyBmcm9tIHJhdGluZyBtYXRyaXhcbmJpZzUgPC0gcGRpbXNbLGMoMiw1LDgsMTAsMTEpXVxuYmlnNWQgPC0gLWFwcGx5KGJpZzUsMixkaXN0KSAjIGNvbnZlcnQgdG8gZGlzdGFuY2VzIGFuZCBzaWduIGZsaXBcbmJpZzVkIDwtIGJpZzVkIC0gbWluKGJpZzVkKSAjIGVuc3VyZSBwb3NpdGl2aXR5XG5cbiMgZW51bWVyYXRlIGFsbCBwb3NzaWJsZSBjb21iaW5hdGlvbnNcbmI1Y29tYnMgPC0gbGlzdCgpXG5pbmQgPC0gMVxuZm9yIChpIGluIDE6NSl7XG4gIGNjb21icyA8LSBjb21ibig1LGkpXG4gIGZvciAoaiBpbiAxOmRpbShjY29tYnMpWzJdKXtcbiAgICBiNWNvbWJzW1tpbmRdXSA8LSBjY29tYnNbLGpdXG4gICAgaW5kIDwtIGluZCArIDFcbiAgfVxufVxuXG4jIGN5Y2xlIHRocm91Z2ggY29tYmluYXRpb25zLCB3aXRoIExPTy1DVlxubmMgPC0gbGVuZ3RoKGI1Y29tYnMpXG5wZXJmIDwtIG1hdHJpeChOQSxuYyxuc3ViKVxuZm9yIChpIGluIDE6bmMpe1xuICB4dmFycyA8LSBjYmluZCgxLGJpZzVkWyxiNWNvbWJzW1tpXV1dKVxuICBmb3IgKGogaW4gMTpuc3ViKXtcbiAgICBmaXQgPC0gbm5scyh4dmFycyxyb3dNZWFucyhuZGF0cFssLWpdKSkgIyBmaXQgdXNpbmcgbm9uLW5lZ2F0aXZlIGxlYXN0IHNxdWFyZXNcbiAgICBwZXJmW2ksal0gPC0gY29yKGZpdCRmaXR0ZWQsbmRhdHBbLGpdKVxuICB9XG59XG4jIGNhbGN1bGF0ZSBtb2RlbCB3aXRoIGJlc3QgcGVyZm9ybWFuY2Vcbm1wZXJmIDwtIHJvd01lYW5zKHBlcmYpXG5jb2xuYW1lcyhiaWc1KVtiNWNvbWJzW1t3aGljaChtcGVyZj09bWF4KG1wZXJmKSlbMV1dXV1cbmBgYCJ9 -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyDpgInmi6nor4Tku7fnn6npmLXlvZPkuK3mnIDlkIjpgILnmoTnu7TluqZcbmJpZzUgPC0gcGRpbXNbLGMoMiw1LDgsMTAsMTEpXVxuYmlnNWQgPC0gLWFwcGx5KGJpZzUsMixkaXN0KSAjIOi9rOaNouS4uui3neemu1xuYmlnNWQgPC0gYmlnNWQgLSBtaW4oYmlnNWQpICMg56Gu5L+d5pWw5YC86YO95Li65q2jXG5cbiMg5YiX5Li+5omA5pyJ5Y+v6IO955qE57uE5ZCIXG5iNWNvbWJzIDwtIGxpc3QoKVxuaW5kIDwtIDFcbmZvciAoaSBpbiAxOjUpe1xuICBjY29tYnMgPC0gY29tYm4oNSxpKVxuICBmb3IgKGogaW4gMTpkaW0oY2NvbWJzKVsyXSl7XG4gICAgYjVjb21ic1tbaW5kXV0gPC0gY2NvbWJzWyxqXVxuICAgIGluZCA8LSBpbmQgKyAxXG4gIH1cbn1cblxuIyDlr7nmiYDmnInnmoTnu4TlkIjmi5/lkIjmqKHlnovov5vooYzorqHnrpdcbm5jIDwtIGxlbmd0aChiNWNvbWJzKVxucGVyZiA8LSBtYXRyaXgoTkEsbmMsbnN1YilcbmZvciAoaSBpbiAxOm5jKXtcbiAgeHZhcnMgPC0gY2JpbmQoMSxiaWc1ZFssYjVjb21ic1tbaV1dXSlcbiAgZm9yIChqIGluIDE6bnN1Yil7XG4gICAgZml0IDwtIG5ubHMoeHZhcnMscm93TWVhbnMobmRhdHBbLC1qXSkpICMgZml0IHVzaW5nIG5vbi1uZWdhdGl2ZSBsZWFzdCBzcXVhcmVzXG4gICAgcGVyZltpLGpdIDwtIGNvcihmaXQkZml0dGVkLG5kYXRwWyxqXSlcbiAgfVxufVxuIyDmoIforrDooajnjrDmnIDkvbPnmoTmqKHlnotcbm1wZXJmIDwtIHJvd01lYW5zKHBlcmYpXG5jb2xuYW1lcyhiaWc1KVtiNWNvbWJzW1t3aGljaChtcGVyZj09bWF4KG1wZXJmKSlbMV1dXV1cbmBgYCJ9 -->
 
 ```r
-# select appropriate dimensions from rating matrix
+# 选择评价矩阵当中最合适的维度
 big5 <- pdims[,c(2,5,8,10,11)]
-big5d <- -apply(big5,2,dist) # convert to distances and sign flip
-big5d <- big5d - min(big5d) # ensure positivity
+big5d <- -apply(big5,2,dist) # 转换为距离
+big5d <- big5d - min(big5d) # 确保数值都为正
 
-# enumerate all possible combinations
+# 列举所有可能的组合
 b5combs <- list()
 ind <- 1
 for (i in 1:5){
@@ -847,7 +845,7 @@ for (i in 1:5){
   }
 }
 
-# cycle through combinations, with LOO-CV
+# 对所有的组合拟合模型进行计算
 nc <- length(b5combs)
 perf <- matrix(NA,nc,nsub)
 for (i in 1:nc){
@@ -857,7 +855,7 @@ for (i in 1:nc){
     perf[i,j] <- cor(fit$fitted,ndatp[,j])
   }
 }
-# calculate model with best performance
+# 标记表现最佳的模型
 mperf <- rowMeans(perf)
 colnames(big5)[b5combs[[which(mperf==max(mperf))[1]]]]
 ```
@@ -880,15 +878,21 @@ colnames(big5)[b5combs[[which(mperf==max(mperf))[1]]]]
 <!-- rnb-text-begin -->
 
 
-The best model consists of just 3 of the Big 5: openness, conscientousness, and extraversion. In practice, if we wanted to then assess the performance of this model (e.g., relativel to the noise ceiling), we would be well-advised to separate the model selection and evaluation steps. In this case, we were only examining 31 possible models (combinations of 5 variables) but the space of possible models grows very rapidly as the number of possible predictors increases. This means that with just a few more dimensions, we would be at serious risk of overfitting by model selection (rather than the typical case of model selection via parameter estimation). Using independent data for model selection and evaluation mitigates this risk.
+我们看到最佳的模型是将大五人格当中的四个因素组合起来：责任心，外向性，神经质，开放性。在实践当中，如果我们想要继续估计这个模型的表现（比如计算一下噪声上限），我们最好分离模型选择和估计模型效力的步骤。在这个研究中，我们只检测了31中可能的模型（大五人格的排列组合），但是可以选择模型的空间会随着备选的预测变量的增加而迅速地增长。这意味着只要稍微多一点点维度，我们就会在模型选择上遇到极大的过拟合风险。使用独立数据进行模型选择和评估可减少这种风险。
 
-## Exploration and visualization
+## 数据探索和可视化
 
 So far we have mainly examined representational similarity from a confirmatory perspsective: trying to fit particular models to the observed neural data. However, exploratory analysis - including data visualization - is essential to complement these confirmatory approaches. In this section we will explore several important exploratory and visualization techniques.
 
-### Multidimensional scaling
+到目前为止，我们主要从验证的角度考察了表征相似性方法：尝试使用模型拟合测量的神经数据。但是，探索性分析（包括可视化）有着至关重要的补充作用。在本节中，我们将探究几种重要的探索性方法和可视化技术。
+
+### 多维缩放法
 
 Multidimensional scaling (MDS) is one of the most powerful techniques for visualizing and exploring similarity data. The basic idea is to take a distance matrix and use it to reconstruct a configuration of points that embody those distances as accurately as possible within an N-dimensional space. In practice, N usually is 2 (sometimes 3) since this makes the results easy to visualize. There are many implementations in R, but we'll be using the smacof package.
+
+多维缩放法是一种非常强大的对数据相似性进行探索和可视化的技术，属于流形学习的一种。
+
+流型学习是一种
 
 #### Trival example: airline distances between French cities
 
@@ -1138,8 +1142,7 @@ plot(as.dendrogram(hc),horiz=T,xlim=c(4,-1))
 
 ## Conclusion
 
-Today we've learned how to conduct representational similarity analyses of fMRI data. First, we learned several methods for calculating the similarity between data objects. Next, we learned about RSA proper, including methods for NHST, effect sizes, cross-validation, and model selection. Finally, we learned about several techniques for exploring and visualizing similarity data, including multidimensional scaling, t-SNE, and hierarchical clustering. Together these methods should give you an excellent position from which to start analyzing neural similarity data!
-
+现在我们已经学习了如何对 fMRI 数据进行表征相似性分析。首先，我们学习了几种计算数据之间相似度的方法。接下来，我们了解了一些 RSA 相关的知识，包括NHST的方法，效应量，交叉验证和模型选择。最后，我们了解了几种探索和可视化数据相似性的技术，包括多维缩放，t-SNE 和多层聚类。这些方法结合在一起可以为你提供一个绝佳的角度开始分析数据相似性！
 
 
 <!-- rnb-text-end -->
