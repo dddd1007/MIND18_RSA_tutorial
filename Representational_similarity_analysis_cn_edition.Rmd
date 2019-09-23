@@ -2,7 +2,9 @@
 title: "表征相似性分析教程"
 author: "Mark A. Thornton, Ph. D."
 date: "August 1, 2018"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
@@ -14,7 +16,7 @@ Ver. 0.001 beta
 
 本教程翻译自 Mark A. Thornton 博士在宾大夏令营的 RSA tutorial 。为了便于理解，**本文中夹带了大量补充信息，包括技术细节的解释和实验设计的描述，同时未于原文作明确区分**，在此注明。
 
-为了节省时间，没有直译，而存在大量的意译，且未推敲词句，仅保证尽可能高的准确性，并期望容易理解。
+为了节省时间，存在大量的意译，且未推敲词句，仅保证尽可能高的准确性，并期望容易理解。
 
 欢迎提交 issue 指出本文仍然没有解释清楚的地方，我会对本文持续迭代。
 
@@ -426,6 +428,8 @@ plot(mdfit)
 
 我们可以看到出现的图像近似于法国地图。
 
+![Franch map](https://about-france.com/photos/towns-france.jpg)
+
 注意这里 MDS 图中的方向是任意的：这是这个方法的一个主要的限制。然而，不同的点的构型能够通过 Procrutes 算法的旋转从而得到相同的方向。
 
 #### MDS 在神经表征相似性上的应用
@@ -444,7 +448,6 @@ psqnsim <- psqnsim - min(psqnsim)
 # fit MDS
 mdfit1 <- smacofSym(psqnsim,2)
 plot(mdfit1)
-
 ```
 
 上图当中人物的距离越近，则意味着他们诱发被试的神经活动模式越相似。我们在什么情况下可以说这个构型对数据有着较好的拟合度呢？在 MDS 当中一个关键的估计统计值是“压力值”。它反映了构型当中的每一个点离它“应该在”的位置有多远。一个简单的标准是当压力值大于 0.15 时，结果较差。但是这并不是一个较好的方法，因为压力值极大地受距离矩阵中对象个数的影响。每节点压力值是一个更好的指标，因为它能够反映特定的点是否有较差的拟合。
@@ -452,21 +455,19 @@ plot(mdfit1)
 ```{r fig.height=8, fig.width=8}
 mdfit1$stress
 plot(mdfit1,plot.type="stressplot")
-
 ```
 
 从上面的结果中，我们可以看到构型的整体压力并不是很好。 Nancy Grace，Michael Jordan，Jimmy Fallon 以及 Bob Marley 与其他个体的神经相似性相比，都在构型图中“放错了位置”。让我们尝试得到更好的拟合结果。我们在这里选择的方法是放宽我们的实验假设，将衡量相似性的度量变量看作是定序变量。
 
 ```{r fig.height=4, fig.width=8}
-
 # fit MDS
 mdfit2 <- smacofSym(psqnsim,2,"ordinal")
 mdfit2$stress
 
 # Shepard plots are another helpful visual diagnostic to examine fit
 layout(mat = t(matrix(c(1,2))))
-plot(mdfit1,plot.type="Shepard","Ratio fit")
-plot(mdfit2,plot.type="Shepard","Ordinal fit")
+plot(mdfit1,plot.type = "Shepard","Ratio fit")
+plot(mdfit2,plot.type = "Shepard","Ordinal fit")
 ```
 
 不幸的是，转换为定序的 MDS 并没有多大的帮助——我们的数据维度太高了，很难在2维上得到表征。稍后我们会介绍一下其他的流型学习方法来让结果变得更好。然而在这之前我们首先来看一下双标图：biplots. 正如我之前所提到的，MDS 的轴是任意方向的。双标图在 MDS 图上增加了一些箭头，这些箭头标示了每个维度在图中坐标轴方向上的相关性。这些箭头能够帮助我们理解 MDS 图背后的含义。
@@ -474,7 +475,7 @@ plot(mdfit2,plot.type="Shepard","Ordinal fit")
 
 #### t-SNE 
 
-t-SEN 方法，或者说 t 分布随机近邻嵌入，是一种非常流行的流型学习和降维方法。不同于 MDS 尝试维持数据的全局结构，t-SNE 则是去保持数据的局部结构。因此在 MDS 当中，cluster 之间的长距离是存在意义的，但是很难保证最终得到的反映构型的近邻结果。相比之下，t-SNE 方法则在解释长距离时缺乏意义，但是近邻结构则会反映反映更多的数据含义。
+t-SNE 方法，或者说 t 分布随机近邻嵌入，是一种非常流行的流型学习和降维方法。不同于 MDS 尝试维持数据的全局结构，t-SNE 则是去保持数据的局部结构。因此在 MDS 当中，cluster 之间的长距离是存在意义的，但是很难保证最终得到的反映构型的近邻结果。相比之下，t-SNE 方法则在解释长距离时缺乏意义，但是近邻结构则会反映反映更多的数据含义。
 
 ```{r fig.height=8, fig.width=8}
 
