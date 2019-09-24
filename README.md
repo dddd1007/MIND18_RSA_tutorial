@@ -23,7 +23,7 @@
 
 将本仓库克隆到你到本地设备。或直接在该页面点击 “Clone or download” 绿色按钮，然后选择 “Download ZIP” 到本地。解压后使用 RStudio 打开 "Representational_similarity_analysis_Chinese_edition.Rmd"  文件。选择编辑器右上角的 Run” 菜单中的 “Run ALL” 按钮。
 
-你同样可以选择文件夹中的 “[Representational_similarity_analysis_cn_edition.html](url)” 文件打开，这是我已经编译好的版本。
+你同样可以选择文件夹中的 “[Representational_similarity_analysis_cn_edition.html](http://xiaokai.me/post/rsa-tutorial/)” 文件打开，这是我已经编译好的版本。
 
 ### 补充知识：同构
 
